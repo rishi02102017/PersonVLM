@@ -908,7 +908,7 @@ gantt
     Multi-camera consistency  :c2, 2026-04-01, 45d
 ```
 
-### Short-term (1-2 weeks)
+### Short-term 
 
 | Improvement | Expected Impact | Effort |
 |-------------|-----------------|--------|
@@ -916,7 +916,7 @@ gantt
 | TensorRT optimization | 2-3× inference speedup | Medium |
 | Confidence calibration | Better uncertainty estimation | Low |
 
-### Medium-term (1-2 months)
+### Medium-term
 
 | Improvement | Expected Impact | Effort |
 |-------------|-----------------|--------|
@@ -924,7 +924,7 @@ gantt
 | DINOv2-small encoder | +3-5% accuracy, better features | Medium |
 | Larger dataset | Enable further model improvements | High |
 
-### Long-term (3+ months)
+### Long-term
 
 | Improvement | Expected Impact | Effort |
 |-------------|-----------------|--------|
