@@ -344,8 +344,9 @@ def get_decoder_config(size: str = "small") -> DecoderConfig:
     
     Sizes:
     - tiny: ~5M params (very fast, limited capacity)
-    - small: ~15M params (balanced)
-    - medium: ~25M params (better quality)
+    - small: ~4M params (original baseline)
+    - medium: ~10M params (moderate quality)
+    - large: ~20M params (scaled up for better quality)
     """
     configs = {
         "tiny": DecoderConfig(
@@ -368,6 +369,13 @@ def get_decoder_config(size: str = "small") -> DecoderConfig:
             num_heads=8,
             num_layers=5,
             ffn_dim=640,
+        ),
+        "large": DecoderConfig(
+            vocab_size=3179,  # Full vocabulary size
+            embed_dim=512,
+            num_heads=8,
+            num_layers=6,
+            ffn_dim=2048,
         ),
     }
     

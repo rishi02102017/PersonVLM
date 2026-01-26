@@ -1,6 +1,7 @@
 # Person VLM Configuration
 # ========================
-# Lightweight Vision-Language Model for Person Description
+# Scaled-up Vision-Language Model for Person Description
+# Optimized for V100 GPU training
 
 # Model Architecture
 model:
@@ -13,52 +14,57 @@ model:
   # Projection layer
   projection:
     num_visual_tokens: 8  # Number of visual tokens for decoder
-    hidden_dim: 512
+    hidden_dim: 1024  # Scaled up for larger decoder
   
   # Text decoder
   decoder:
-    size: "small"  # Options: tiny (~5M), small (~15M), medium (~25M)
+    size: "large"  # Options: tiny (~5M), small (~4M), medium (~10M), large (~20M)
   
   # Shared dimensions
-  hidden_dim: 256
+  hidden_dim: 512  # Scaled up from 256 to 512
   
   # Regularization
   dropout: 0.1
   label_smoothing: 0.1
 
-# Training Configuration
+# Training Configuration (Optimized for V100 GPUs)
+# 
+# IMPORTANT: Linear Scaling Rule (Goyal et al., 2017)
+# When batch size increases, LR should scale proportionally.
+# Baseline: batch=32, LR=1e-4 → Scaled: batch=256, LR should be ~2e-4
+#
 training:
   # Basic settings
-  epochs: 20
-  batch_size: 32
+  epochs: 75  # Larger models need more epochs to converge
+  batch_size: 64  # Per-GPU (effective = 64 × 4 = 256)
   
   # Optimizer
   optimizer: "adamw"
-  learning_rate: 1.0e-4
-  weight_decay: 0.01
+  learning_rate: 2.0e-4  # Scaled up per Linear Scaling Rule (was 5e-5, too low!)
+  weight_decay: 0.005  # Reduced for larger model (was 0.01)
   
   # Scheduler
   scheduler: "cosine"
-  warmup_ratio: 0.1
+  warmup_ratio: 0.05  # Shorter warmup (5%) to reach peak LR faster
   
-  # Mixed precision
+  # Mixed precision (enabled for CUDA)
   use_amp: true
   
   # Gradient clipping
   gradient_clip: 1.0
   
   # Data loading
-  num_workers: 4
+  num_workers: 8  # Increased for faster data loading
   image_size: 224
   max_seq_length: 256  # Accommodate detailed MSP60k captions (mean ~100 tokens)
   
   # Checkpointing
-  output_dir: "./checkpoints"
+  output_dir: "./checkpoints_scaled"  # Overwrite previous suboptimal training
   save_every: 1  # epochs
   
   # Early stopping
   early_stopping: true
-  patience: 5
+  patience: 15  # Much more patience - larger models converge slowly
   
   # Logging
   log_every: 50  # steps
@@ -121,30 +127,60 @@ deployment:
 hardware:
   device: "auto"  # auto, cuda, mps, cpu
   precision: "fp16"  # fp16, fp32, bf16
+  
+# Multi-GPU Configuration (DDP)
+distributed:
+  # Automatically detected at runtime
+  enabled: true
+  backend: "nccl"  # NCCL is optimized for NVIDIA GPUs
+  
+# V100-Specific Optimizations
+# ============================
+# The Tesla V100 has unique capabilities:
+#
+# 1. TENSOR CORES: 
+#    - FP16 Tensor Core ops: 125 TFLOPS
+#    - FP32 ops: 15.7 TFLOPS  
+#    - Using AMP (mixed precision) gives ~8x speedup
+#
+# 2. HBM2 MEMORY:
+#    - 32GB per GPU with 900 GB/s bandwidth
+#    - Allows larger batch sizes (64-128 per GPU)
+#
+# 3. NVLINK:
+#    - 300 GB/s bidirectional bandwidth between GPUs
+#    - Enables efficient gradient synchronization in DDP
+#
+# 4. NCCL BACKEND:
+#    - Collective communication optimized for NVIDIA GPUs
+#    - Uses NVLink when available, falls back to PCIe
 
 # Recommended Configurations for Different Budgets
 # ================================================
 #
-# 1. ULTRA-LIGHT (~15M params, fastest)
+# 1. BASELINE (~7M params, original)
 #    model:
-#      vision:
-#        backbone: "mobilevit_xxs"
-#        freeze_ratio: 0.95
+#      hidden_dim: 256
 #      decoder:
-#        size: "tiny"
+#        size: "small"
+#    training:
+#      batch_size: 32
+#
+# 2. SCALED (~25M params, current configuration)
+#    [Current default - optimized for V100]
+#    model:
+#      hidden_dim: 512
+#      decoder:
+#        size: "large"  # 6 layers, 512 dim, 2048 FFN
 #    training:
 #      batch_size: 64
-#
-# 2. BALANCED (~30M params, recommended)
-#    [Current default configuration]
-#
-# 3. QUALITY (~50M params, best accuracy)
-#    model:
-#      vision:
-#        backbone: "mobilevit_xs"
-#        freeze_ratio: 0.85
-#      decoder:
-#        size: "medium"
-#    training:
-#      batch_size: 24
 #      learning_rate: 5.0e-5
+#
+# 3. MAXIMUM (~40-50M params, if needed)
+#    model:
+#      hidden_dim: 768
+#      decoder:
+#        size: "large" (modify to 8 layers)
+#    training:
+#      batch_size: 32
+#      learning_rate: 3.0e-5

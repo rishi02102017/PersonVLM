@@ -154,14 +154,22 @@ GENDER = ['male', 'female', 'man', 'woman', 'boy', 'girl']
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model_path', type=str, default='checkpoints/best_model.pt',
+                        help='Path to model checkpoint')
+    parser.add_argument('--output_file', type=str, default='evaluation_results_full.json',
+                        help='Output JSON file for results')
+    args = parser.parse_args()
+    
     print("=" * 70)
     print("PersonVLM FULL Evaluation (Corpus-level Metrics)")
     print("=" * 70)
     
     # Load model
-    print("\nLoading model...")
+    print(f"\nLoading model from: {args.model_path}")
     vocab = PersonVocabulary.load('data/vocabulary.json')
-    model = PersonVLM.from_pretrained('checkpoints/best_model.pt', tokenizer=vocab)
+    model = PersonVLM.from_pretrained(args.model_path, tokenizer=vocab)
     
     device = torch.device('mps' if torch.backends.mps.is_available() 
                           else 'cuda' if torch.cuda.is_available() 
@@ -318,11 +326,12 @@ def main():
     print("\n[Summary]")
     print("-" * 50)
     print(f"Samples evaluated: {successful}")
+    print(f"Model: {args.model_path}")
     print(f"Evaluation set: Last 20% of data (no training overlap)")
-    print(f"Final Val Loss: 1.97")
     
     # Save results
     results = {
+        "model": args.model_path,
         "method": "corpus-level (proper evaluation)",
         "num_samples": successful,
         "bleu1": bleu1,
@@ -338,10 +347,10 @@ def main():
         "overall_attribute_accuracy": avg_attr,
     }
     
-    with open('evaluation_results_full.json', 'w') as f:
+    with open(args.output_file, 'w') as f:
         json.dump(results, f, indent=2)
     
-    print("\nResults saved to evaluation_results_full.json")
+    print(f"\nResults saved to {args.output_file}")
     print("=" * 70)
     
     # Show a few examples

@@ -1,0 +1,16 @@
+{
+  "model": "checkpoints_scaled/best_model.pt",
+  "method": "corpus-level (proper evaluation)",
+  "num_samples": 500,
+  "bleu1": 0.5479407586210723,
+  "bleu2": 0.39350652778490863,
+  "bleu3": 0.29950736886399415,
+  "bleu4": 0.23158368418148478,
+  "rouge_l": 0.4134099898204474,
+  "cider": 0.7262323385015869,
+  "color_accuracy": 0.6522504527538084,
+  "clothing_accuracy": 0.6776595744680851,
+  "action_accuracy": 0.6890151515151516,
+  "gender_accuracy": 0.5362426035502958,
+  "overall_attribute_accuracy": 0.6387919455718352
+}

@@ -367,25 +367,31 @@ def create_dataloaders(
     num_workers: int = 4,
     augment_train: bool = True,
     in_memory: bool = False,
+    distributed: bool = False,
 ) -> Tuple[DataLoader, Optional[DataLoader]]:
     """
     Create train and validation dataloaders.
+    
+    Supports both single-GPU and multi-GPU (DDP) training.
     
     Args:
         train_file: Path to training JSONL/JSON file
         val_file: Optional path to validation JSONL/JSON file
         vocab: PersonVocabulary instance
         image_dir: Directory containing images
-        batch_size: Batch size
+        batch_size: Per-GPU batch size (effective batch = batch_size * num_gpus)
         image_size: Image size
         max_seq_length: Maximum sequence length
-        num_workers: DataLoader workers
+        num_workers: DataLoader workers per GPU
         augment_train: Whether to augment training data
         in_memory: Whether to load all data into memory
+        distributed: Whether to use DistributedSampler for DDP training
         
     Returns:
         Tuple of (train_loader, val_loader)
     """
+    from torch.utils.data import DistributedSampler
+    
     DatasetClass = PersonBlobDatasetInMemory if in_memory else PersonBlobDataset
     
     # Training dataset
@@ -401,13 +407,24 @@ def create_dataloaders(
     # pin_memory only helps with CUDA
     use_pin_memory = torch.cuda.is_available()
     
+    # Create sampler for distributed training
+    train_sampler = None
+    if distributed:
+        train_sampler = DistributedSampler(
+            train_dataset,
+            shuffle=True,
+            drop_last=True,
+        )
+    
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
-        shuffle=True,
+        shuffle=(train_sampler is None),  # Only shuffle if not using distributed sampler
+        sampler=train_sampler,
         num_workers=num_workers,
         pin_memory=use_pin_memory,
         drop_last=True,
+        persistent_workers=num_workers > 0,  # Keep workers alive between epochs
     )
     
     # Validation dataset
@@ -422,12 +439,22 @@ def create_dataloaders(
             augment=False,
         )
         
+        # Validation sampler for distributed
+        val_sampler = None
+        if distributed:
+            val_sampler = DistributedSampler(
+                val_dataset,
+                shuffle=False,
+            )
+        
         val_loader = DataLoader(
             val_dataset,
             batch_size=batch_size,
             shuffle=False,
+            sampler=val_sampler,
             num_workers=num_workers,
             pin_memory=use_pin_memory,
+            persistent_workers=num_workers > 0,
         )
     
     return train_loader, val_loader

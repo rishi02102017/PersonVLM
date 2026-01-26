@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """
-Training Script for Person VLM
-==============================
-Train the lightweight VLM on person blob images with captions
+Training Script for Person VLM (Scaled Version)
+================================================
+Train the Vision-Language Model on person blob images with captions.
 
-Usage:
+Supports both single-GPU and multi-GPU (DDP) training.
+
+Single GPU:
     python train.py --train_file data/train.json --val_file data/val.json
-    python train.py --config configs/config.yaml
+
+Multi-GPU (Distributed Data Parallel):
+    torchrun --nproc_per_node=4 train.py --config configs/config.yaml
+
+Multi-GPU with specific GPUs:
+    CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --nproc_per_node=4 train.py --config configs/config.yaml
 """
 
 import os
@@ -28,6 +35,8 @@ try:
 except ImportError:
     pass
 
+import torch
+from torch.utils.data import DistributedSampler
 from models import PersonVLM, PersonVLMConfig
 from data import PersonVocabulary, create_dataloaders
 from training import Trainer, TrainingConfig
@@ -78,8 +87,8 @@ Examples:
     )
     parser.add_argument(
         "--decoder_size", type=str,
-        choices=["tiny", "small", "medium"],
-        help="Text decoder size"
+        choices=["tiny", "small", "medium", "large"],
+        help="Text decoder size (large: 6 layers, 512 dim, 2048 FFN)"
     )
     parser.add_argument(
         "--freeze_ratio", type=float,
@@ -90,6 +99,8 @@ Examples:
     parser.add_argument("--epochs", type=int, help="Number of epochs")
     parser.add_argument("--batch_size", type=int, help="Batch size")
     parser.add_argument("--learning_rate", type=float, help="Learning rate")
+    parser.add_argument("--weight_decay", type=float, help="Weight decay (L2 regularization)")
+    parser.add_argument("--warmup_ratio", type=float, help="Warmup ratio (fraction of total steps)")
     parser.add_argument("--output_dir", type=str, help="Output directory")
     
     # Hardware
@@ -135,11 +146,11 @@ Examples:
         vision_freeze_ratio=args.freeze_ratio or config_dict.get("model", {}).get("vision", {}).get("freeze_ratio", 0.9),
         
         # Training
-        epochs=args.epochs or config_dict.get("training", {}).get("epochs", 20),
-        batch_size=args.batch_size or config_dict.get("training", {}).get("batch_size", 32),
-        learning_rate=args.learning_rate or config_dict.get("training", {}).get("learning_rate", 1e-4),
-        weight_decay=config_dict.get("training", {}).get("weight_decay", 0.01),
-        warmup_ratio=config_dict.get("training", {}).get("warmup_ratio", 0.1),
+        epochs=args.epochs or config_dict.get("training", {}).get("epochs", 75),
+        batch_size=args.batch_size or config_dict.get("training", {}).get("batch_size", 64),
+        learning_rate=args.learning_rate or config_dict.get("training", {}).get("learning_rate", 2e-4),
+        weight_decay=args.weight_decay or config_dict.get("training", {}).get("weight_decay", 0.005),
+        warmup_ratio=args.warmup_ratio or config_dict.get("training", {}).get("warmup_ratio", 0.05),
         
         # Optimizer & Scheduler
         optimizer=config_dict.get("training", {}).get("optimizer", "adamw"),
@@ -164,7 +175,7 @@ Examples:
         
         # Early stopping
         early_stopping=config_dict.get("training", {}).get("early_stopping", True),
-        patience=config_dict.get("training", {}).get("patience", 5),
+        patience=config_dict.get("training", {}).get("patience", 15),
         
         # Logging
         log_every=config_dict.get("training", {}).get("log_every", 50),
@@ -178,26 +189,58 @@ Examples:
     if not training_config.train_file:
         parser.error("--train_file is required (or specify in config)")
     
+    # Check for distributed training environment
+    is_distributed = 'RANK' in os.environ and 'WORLD_SIZE' in os.environ
+    local_rank = int(os.environ.get('LOCAL_RANK', 0))
+    world_size = int(os.environ.get('WORLD_SIZE', 1))
+    rank = int(os.environ.get('RANK', 0))
+    is_main = local_rank == 0
+    
+    # Initialize distributed process group BEFORE creating dataloaders
+    if is_distributed:
+        import torch.distributed as dist
+        if not dist.is_initialized():
+            dist.init_process_group(
+                backend='nccl',
+                init_method='env://',
+                world_size=world_size,
+                rank=rank
+            )
+            torch.cuda.set_device(local_rank)
+            if is_main:
+                print(f"\n{'='*60}")
+                print("Distributed Training Initialized")
+                print(f"{'='*60}")
+                print(f"Backend: NCCL")
+                print(f"World Size: {world_size} GPUs")
+                print(f"{'='*60}")
+    
     # Create vocabulary
-    print("\n" + "=" * 60)
-    print("Loading vocabulary...")
-    print("=" * 60)
+    if is_main:
+        print("\n" + "=" * 60)
+        print("Loading vocabulary...")
+        print("=" * 60)
     
     vocab_file = args.vocab_file or config_dict.get("data", {}).get("vocab_file")
     if vocab_file and os.path.exists(vocab_file):
         vocab = PersonVocabulary.load(vocab_file)
     else:
         vocab = PersonVocabulary()
-    print(f"Vocabulary size: {len(vocab)}")
+    if is_main:
+        print(f"Vocabulary size: {len(vocab)}")
     
     # Create dataloaders
-    print("\n" + "=" * 60)
-    print("Creating dataloaders...")
-    print("=" * 60)
+    if is_main:
+        print("\n" + "=" * 60)
+        print("Creating dataloaders...")
+        if is_distributed:
+            print(f"Mode: Distributed (World Size: {world_size})")
+        print("=" * 60)
     
     # Get image directory
     image_dir = args.image_dir or config_dict.get("data", {}).get("image_dir")
     
+    # Create dataloaders with optional distributed sampler
     train_loader, val_loader = create_dataloaders(
         train_file=training_config.train_file,
         val_file=training_config.val_file,
@@ -208,6 +251,7 @@ Examples:
         max_seq_length=training_config.max_seq_length,
         num_workers=training_config.num_workers,
         augment_train=config_dict.get("data", {}).get("augment_train", True),
+        distributed=is_distributed,  # Enable distributed sampling
     )
     
     # Create model

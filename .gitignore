@@ -1,8 +1,9 @@
-# Dataset (large, proprietary)
-PERSON_DATA/
+# Dataset - only ignore images (large files)
+PERSON_DATA/images/
 
-# Model checkpoints (large files)
+# Model checkpoints (large files, use Git LFS or external storage)
 checkpoints/
+checkpoints_scaled/
 *.pt
 *.pth
 

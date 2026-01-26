@@ -25,10 +25,10 @@ class PersonVLMConfig:
     
     # Projection
     num_visual_tokens: int = 8
-    projection_hidden_dim: int = 512
+    projection_hidden_dim: int = 1024  # Scaled up for larger model
     
     # Text decoder
-    decoder_size: str = "small"  # tiny, small, medium
+    decoder_size: str = "large"  # tiny, small, medium, large
     vocab_size: int = 3179  # Vocabulary size (default from MSP60k corpus)
     max_seq_length: int = 256  # Maximum sequence length (MSP60k has long captions)
     
@@ -38,7 +38,7 @@ class PersonVLMConfig:
     eos_token_id: int = 2
     
     # Shared dimensions
-    hidden_dim: int = 256
+    hidden_dim: int = 512  # Scaled up from 256 to 512
     
     # Training
     dropout: float = 0.1
@@ -266,10 +266,10 @@ class PersonVLM(nn.Module):
 
 def create_person_vlm(
     vision_backbone: str = "mobilevit_xs",
-    decoder_size: str = "small",
+    decoder_size: str = "large",
     vision_freeze_ratio: float = 0.9,
     vocab_size: int = 3179,
-    max_seq_length: int = 128,
+    max_seq_length: int = 256,
     pad_token_id: int = 0,
     bos_token_id: int = 1,
     eos_token_id: int = 2,
@@ -280,17 +280,17 @@ def create_person_vlm(
     
     Recommended configurations for ≤100M params:
     
-    1. Lightweight (fast, ~15M params):
+    1. Lightweight (fast, ~7M params):
        - vision_backbone="mobilevit_xxs"
-       - decoder_size="tiny"
-       
-    2. Balanced (recommended, ~30M params):
-       - vision_backbone="mobilevit_xs"
        - decoder_size="small"
        
-    3. Quality (better output, ~50M params):
+    2. Balanced (recommended, ~25M params):
        - vision_backbone="mobilevit_xs"
-       - decoder_size="medium"
+       - decoder_size="large"
+       
+    3. Quality (better output, ~40M params):
+       - vision_backbone="mobilevit_xs"
+       - decoder_size="large" + increased layers
     """
     config = PersonVLMConfig(
         vision_backbone=vision_backbone,
