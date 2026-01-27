@@ -3,851 +3,2240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PersonVLM - Vision-Language Model Demo</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>PersonVLM | Enterprise Vision-Language AI Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: #1a1a24;
-            --bg-card-hover: #22222e;
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --accent-green: #10b981;
-            --accent-orange: #f59e0b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
+            --bg-dark: #0a0b14;
+            --bg-darker: #060710;
+            --bg-card: rgba(15, 20, 40, 0.6);
+            --bg-card-solid: #0d1025;
+            --accent-blue: #4f8fff;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-green: #22c55e;
+            --text-white: #ffffff;
+            --text-gray: #94a3b8;
             --text-muted: #64748b;
-            --border-color: #2d2d3a;
-            --gradient-1: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            --gradient-2: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --glow-blue: rgba(79, 143, 255, 0.3);
+            --glow-purple: rgba(168, 85, 247, 0.3);
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        
+        html { scroll-behavior: smooth; }
+        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-white);
             line-height: 1.6;
+            overflow-x: hidden;
             min-height: 100vh;
         }
-
-        /* Animated background */
-        .bg-gradient {
+        
+        /* Particle Canvas Background */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        /* Gradient Overlay */
+        .gradient-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse 100% 70% at 50% -20%, rgba(79, 143, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse 80% 50% at 80% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 20% 80%, rgba(0, 212, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* Navigation */
+        .navbar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
+            z-index: 1000;
+            padding: 16px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 11, 20, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
         }
-
+        
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        
+        .nav-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-logo-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
+        }
+        
+        .nav-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-white);
+            letter-spacing: -0.02em;
+        }
+        
+        .nav-logo-text span {
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+        
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-link {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 18px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            color: var(--text-white);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-white);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            margin-left: 8px;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .nav-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+        
+        /* Main Content */
+        .main-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 24px 80px;
+            position: relative;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(79, 143, 255, 0.1);
+            border: 1px solid rgba(79, 143, 255, 0.2);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 32px;
+        }
+        
+        .hero-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        .hero-title {
+            font-size: clamp(42px, 7vw, 72px);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
+            max-width: 900px;
+        }
+        
+        .hero-title .gradient-text {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 50%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-gray);
+            max-width: 640px;
+            margin-bottom: 40px;
+            line-height: 1.7;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 80px;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            box-shadow: 0 4px 24px var(--glow-blue), 0 0 0 1px rgba(255,255,255,0.1) inset;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px var(--glow-blue), 0 0 0 1px rgba(255,255,255,0.2) inset;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-white);
+            border: 1px solid var(--border-subtle);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Hero Stats */
+        .hero-stats {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .hero-stat {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 24px 40px;
+            text-align: center;
+            min-width: 160px;
+            transition: all 0.3s ease;
+        }
+        
+        .hero-stat:hover {
+            transform: translateY(-4px);
+            border-color: rgba(79, 143, 255, 0.3);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .hero-stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        
+        .hero-stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+            animation: bounce 2s infinite;
+        }
+        
+        .scroll-indicator svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(8px); }
+        }
+        
+        /* Container */
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 40px 24px;
-            position: relative;
-            z-index: 1;
+            padding: 0 24px;
         }
-
-        /* Header Section */
-        .header {
+        
+        /* Section */
+        .section {
+            padding: 100px 0;
+        }
+        
+        .section-header {
             text-align: center;
-            margin-bottom: 48px;
+            margin-bottom: 64px;
         }
-
-        .logo {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
+        
+        .section-label {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
             margin-bottom: 16px;
         }
-
-        .logo-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--gradient-1);
-            border-radius: 12px;
+        
+        .section-title {
+            font-size: 40px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+        
+        .section-subtitle {
+            font-size: 16px;
+            color: var(--text-gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Architecture Section */
+        .arch-grid {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-        }
-
-        .logo-text {
-            font-size: 32px;
-            font-weight: 700;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .header h1 {
-            font-size: 42px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.02em;
-        }
-
-        .subtitle {
-            font-size: 18px;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-        }
-
-        .badges {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
+            gap: 24px;
             flex-wrap: wrap;
         }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            border-radius: 24px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .badge-primary {
-            background: var(--gradient-1);
-            color: white;
-        }
-
-        .badge-success {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--accent-green);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .badge-info {
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--accent-blue);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        /* Stats Grid */
-        .stats-section {
-            margin-bottom: 48px;
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border-color);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-        }
-
-        .stat-card {
+        
+        .arch-card {
             background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 32px;
             text-align: center;
+            width: 240px;
             transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            background: var(--bg-card-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            margin: 0 auto 12px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .stat-icon.blue { background: rgba(59, 130, 246, 0.15); }
-        .stat-icon.green { background: rgba(16, 185, 129, 0.15); }
-        .stat-icon.purple { background: rgba(139, 92, 246, 0.15); }
-        .stat-icon.orange { background: rgba(245, 158, 11, 0.15); }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 4px;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stat-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        /* Metrics Section */
-        .metrics-section {
-            margin-bottom: 48px;
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-        }
-
-        .metric-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
             position: relative;
             overflow: hidden;
         }
-
-        .metric-card::before {
+        
+        .arch-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             height: 3px;
-            background: var(--gradient-1);
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-
-        .metric-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
+        
+        .arch-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(79, 143, 255, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         }
-
-        .metric-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-top: 4px;
+        
+        .arch-card:hover::before {
+            opacity: 1;
         }
-
-        /* Architecture Section */
-        .architecture-section {
-            margin-bottom: 48px;
-        }
-
-        .architecture-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 32px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            position: relative;
-        }
-
-        @media (max-width: 768px) {
-            .architecture-card {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .arch-component {
-            text-align: center;
-            padding: 24px;
-            background: var(--bg-secondary);
+        
+        .arch-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, rgba(79, 143, 255, 0.2), rgba(168, 85, 247, 0.2));
             border-radius: 16px;
-            position: relative;
-        }
-
-        .arch-component h4 {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .arch-component h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 12px;
-        }
-
-        .arch-component p {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .arch-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--accent-blue);
-            font-size: 24px;
-            display: none;
-        }
-
-        @media (min-width: 769px) {
-            .arch-arrow {
-                display: block;
-            }
-            .arch-arrow.arrow-1 { left: calc(33.33% - 12px); }
-            .arch-arrow.arrow-2 { left: calc(66.66% - 12px); }
-        }
-
-        /* Model Progression */
-        .progression-section {
-            margin-bottom: 48px;
-        }
-
-        .progression-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 32px;
-        }
-
-        .progression-steps {
-            display: flex;
-            justify-content: space-between;
-            position: relative;
-            margin-bottom: 24px;
-        }
-
-        .progression-steps::before {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 40px;
-            right: 40px;
-            height: 2px;
-            background: var(--border-color);
-        }
-
-        .step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            z-index: 1;
-            flex: 1;
-        }
-
-        .step-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
-            font-size: 14px;
+            margin: 0 auto 20px;
+            font-size: 28px;
+        }
+        
+        .arch-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+        
+        .arch-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-white);
             margin-bottom: 12px;
+        }
+        
+        .arch-info {
+            font-size: 13px;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+        
+        .arch-arrow {
+            font-size: 32px;
+            color: var(--accent-blue);
+            opacity: 0.6;
+        }
+        
+        /* Metrics Section */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 20px;
+        }
+        
+        @media (max-width: 1200px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+        
+        .metric-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 28px 24px;
+            text-align: center;
             transition: all 0.3s ease;
         }
-
-        .step.completed .step-circle {
-            background: var(--accent-green);
-            color: white;
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(34, 197, 94, 0.3);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
         }
-
-        .step.active .step-circle {
-            background: var(--gradient-1);
-            color: white;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        
+        .metric-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--accent-green);
+            margin-bottom: 8px;
         }
-
-        .step:not(.completed):not(.active) .step-circle {
-            background: var(--bg-secondary);
-            color: var(--text-muted);
-            border: 2px solid var(--border-color);
-        }
-
-        .step-label {
+        
+        .metric-label {
             font-size: 12px;
-            color: var(--text-secondary);
-            text-align: center;
-            max-width: 100px;
-        }
-
-        .step.active .step-label {
-            color: var(--accent-blue);
             font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
-
-        /* Samples Section */
-        .samples-section {
-            margin-bottom: 48px;
+        
+        /* Results Section */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
         }
-
-        .sample-card {
+        
+        @media (max-width: 1024px) { .results-grid { grid-template-columns: 1fr; } }
+        
+        .result-card {
             background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
             border-radius: 20px;
-            margin-bottom: 20px;
             overflow: hidden;
             transition: all 0.3s ease;
         }
-
-        .sample-card:hover {
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        
+        .result-card:hover {
+            border-color: rgba(79, 143, 255, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
-
-        .sample-header {
-            background: var(--bg-secondary);
-            padding: 16px 24px;
+        
+        .result-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border-color);
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-subtle);
         }
-
-        .sample-title {
-            font-weight: 600;
+        
+        .result-num {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-
-        .sample-number {
-            background: var(--gradient-1);
-            color: white;
-            width: 28px;
-            height: 28px;
+        
+        .result-badge {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 13px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .result-label {
+            font-size: 14px;
             font-weight: 600;
+            color: var(--text-white);
         }
-
-        .sample-filename {
-            font-size: 13px;
+        
+        .result-filename {
+            font-size: 11px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
             color: var(--text-muted);
-            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px 10px;
+            border-radius: 6px;
         }
-
-        .sample-content {
-            display: grid;
-            grid-template-columns: 220px 1fr;
-            gap: 24px;
-            padding: 24px;
+        
+        .result-body {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
         }
-
-        @media (max-width: 768px) {
-            .sample-content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .sample-image {
-            position: relative;
-        }
-
-        .sample-image img {
-            width: 100%;
-            height: 220px;
+        
+        .result-image {
+            width: 180px;
+            height: 180px;
             object-fit: cover;
             border-radius: 12px;
-            border: 2px solid var(--border-color);
+            flex-shrink: 0;
+            border: 2px solid var(--border-subtle);
         }
-
-        .sample-descriptions {
+        
+        .result-content {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
         }
-
+        
         .desc-box {
-            background: var(--bg-secondary);
+            background: rgba(0, 0, 0, 0.2);
             border-radius: 12px;
-            padding: 16px 20px;
+            padding: 14px 16px;
             position: relative;
         }
-
+        
         .desc-box.generated {
             border-left: 3px solid var(--accent-green);
         }
-
+        
         .desc-box.ground-truth {
             border-left: 3px solid var(--accent-blue);
         }
-
+        
         .desc-label {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            font-weight: 600;
+            gap: 6px;
+            font-size: 10px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             padding: 4px 10px;
-            border-radius: 6px;
+            border-radius: 4px;
         }
-
+        
         .desc-box.generated .desc-label {
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(34, 197, 94, 0.15);
             color: var(--accent-green);
         }
-
+        
         .desc-box.ground-truth .desc-label {
-            background: rgba(59, 130, 246, 0.15);
+            background: rgba(79, 143, 255, 0.15);
             color: var(--accent-blue);
         }
-
+        
         .desc-text {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.7;
+            font-size: 13px;
+            color: var(--text-gray);
+            line-height: 1.6;
         }
-
+        
         /* Footer */
         .footer {
             text-align: center;
-            padding: 32px;
-            border-top: 1px solid var(--border-color);
-            margin-top: 48px;
+            padding: 60px 24px;
+            border-top: 1px solid var(--border-subtle);
+            margin-top: 60px;
         }
-
+        
+        .footer-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .footer-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .footer-logo-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+        }
+        
+        .footer-logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-white);
+        }
+        
         .footer-text {
             color: var(--text-muted);
-            font-size: 13px;
+            font-size: 14px;
+            margin-bottom: 24px;
         }
-
+        
         .footer-links {
             display: flex;
             justify-content: center;
-            gap: 24px;
-            margin-top: 16px;
+            gap: 32px;
         }
-
+        
         .footer-link {
-            color: var(--text-secondary);
+            color: var(--text-gray);
             text-decoration: none;
-            font-size: 13px;
+            font-size: 14px;
             transition: color 0.2s;
         }
-
+        
         .footer-link:hover {
             color: var(--accent-blue);
         }
-
+        
         /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
+        
         .animate-in {
-            animation: fadeIn 0.6s ease forwards;
+            animation: fadeInUp 0.8s ease forwards;
         }
-
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
+        
+        .delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .delay-4 { animation-delay: 0.4s; opacity: 0; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar { padding: 12px 20px; }
+            .nav-links { display: none; }
+            .hero { padding: 100px 20px 60px; }
+            .hero-buttons { flex-direction: column; width: 100%; max-width: 300px; }
+            .hero-stats { gap: 12px; }
+            .hero-stat { padding: 20px 24px; min-width: 140px; }
+            .result-body { flex-direction: column; }
+            .result-image { width: 100%; height: 200px; }
+        }
     </style>
 </head>
 <body>
-    <div class="bg-gradient"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="gradient-overlay"></div>
     
-    <div class="container">
-        <!-- Header -->
-        <header class="header animate-in">
-            <div class="logo">
-                <div class="logo-icon">P</div>
-                <span class="logo-text">PersonVLM</span>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="#" class="nav-logo">
+            <div class="nav-logo-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
             </div>
-            <h1>Vision-Language Model Demo</h1>
-            <p class="subtitle">Lightweight person description generation with MobileViT + DistilGPT-2</p>
-            <div class="badges">
-                <span class="badge badge-primary">Fine-tuned v2</span>
-                <span class="badge badge-success">Best Performance</span>
-                <span class="badge badge-info">98.51M Parameters</span>
+            <span class="nav-logo-text">Person<span>VLM</span></span>
+        </a>
+        <div class="nav-links">
+            <a href="#overview" class="nav-link">Overview</a>
+            <a href="#architecture" class="nav-link">Architecture</a>
+            <a href="#results" class="nav-link">Results</a>
+            <a href="#metrics" class="nav-link">Metrics</a>
+            <a href="https://github.com/rishi02102017/PersonVLM" class="nav-btn" target="_blank">
+                <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                GitHub
+            </a>
+        </div>
+    </nav>
+    
+    <div class="main-content">
+        <!-- Hero Section -->
+        <section class="hero" id="overview">
+            <div class="hero-badge animate-in">
+                Lightweight Vision-Language Model
             </div>
-        </header>
-
-        <!-- Model Stats -->
-        <section class="stats-section animate-in delay-1">
-            <div class="section-title">Model Overview</div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon blue">M</div>
-                    <div class="stat-value">98.51M</div>
-                    <div class="stat-label">Total Parameters</div>
+            <h1 class="hero-title animate-in delay-1">
+                Transform <span class="gradient-text">Images</span><br>Into <span class="gradient-text">Understanding</span>
+            </h1>
+            <p class="hero-subtitle animate-in delay-2">
+                A 98.51M parameter Vision-Language Model that generates structured, accurate descriptions of people from images. Built for real-time surveillance and monitoring applications.
+            </p>
+            <div class="hero-buttons animate-in delay-3">
+                <a href="#results" class="btn btn-primary">View Results</a>
+                <a href="#architecture" class="btn btn-secondary">Explore Architecture</a>
+            </div>
+            <div class="hero-stats animate-in delay-4">
+                <div class="hero-stat">
+                    <div class="hero-stat-value">98.51</div>
+                    <div class="hero-stat-label">Million Params</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon green">E</div>
-                    <div class="stat-value">2.03M</div>
-                    <div class="stat-label">Vision Encoder</div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">25</div>
+                    <div class="hero-stat-label">ms Inference</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon purple">P</div>
-                    <div class="stat-value">14.56M</div>
-                    <div class="stat-label">Projection Layer</div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">30,000</div>
+                    <div class="hero-stat-label">Training Samples</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon orange">D</div>
-                    <div class="stat-value">81.91M</div>
-                    <div class="stat-label">Text Decoder</div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">75</div>
+                    <div class="hero-stat-label">% Loss Reduction</div>
                 </div>
             </div>
-        </section>
-
-        <!-- Evaluation Metrics -->
-        <section class="metrics-section animate-in delay-2">
-            <div class="section-title">Evaluation Metrics</div>
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-value">54.23</div>
-                    <div class="metric-label">BLEU-1</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">40.33</div>
-                    <div class="metric-label">BLEU-2</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">31.57</div>
-                    <div class="metric-label">BLEU-3</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">24.86</div>
-                    <div class="metric-label">BLEU-4</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">42.22</div>
-                    <div class="metric-label">ROUGE-L</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">0.83</div>
-                    <div class="metric-label">CIDEr</div>
-                </div>
+            <div class="scroll-indicator">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
             </div>
         </section>
-
-        <!-- Architecture -->
-        <section class="architecture-section animate-in delay-2">
-            <div class="section-title">Model Architecture</div>
-            <div class="architecture-card">
-                <div class="arch-component">
-                    <h4>Vision Encoder</h4>
-                    <h3>MobileViT-XS</h3>
-                    <p>2.03M params<br>224x224 input<br>256-dim output</p>
+        
+        <!-- Architecture Section -->
+        <section class="section" id="architecture">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-label">How It Works</span>
+                    <h2 class="section-title">Model Architecture</h2>
+                    <p class="section-subtitle">Three-stage pipeline transforming visual input into natural language descriptions</p>
                 </div>
-                <span class="arch-arrow arrow-1">&#8594;</span>
-                <div class="arch-component">
-                    <h4>Projection</h4>
-                    <h3>MLP Bridge</h3>
-                    <p>14.56M params<br>256 &#8594; 768 dims<br>12 visual tokens</p>
-                </div>
-                <span class="arch-arrow arrow-2">&#8594;</span>
-                <div class="arch-component">
-                    <h4>Text Decoder</h4>
-                    <h3>DistilGPT-2</h3>
-                    <p>81.91M params<br>768-dim hidden<br>Fully fine-tuned</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Model Progression -->
-        <section class="progression-section animate-in delay-2">
-            <div class="section-title">Experimental Progression</div>
-            <div class="progression-card">
-                <div class="progression-steps">
-                    <div class="step completed">
-                        <div class="step-circle">1</div>
-                        <div class="step-label">Baseline<br><small>7.26M</small></div>
+                <div class="arch-grid">
+                    <div class="arch-card">
+                        <div class="arch-icon">👁️</div>
+                        <div class="arch-label">Vision Encoder</div>
+                        <div class="arch-name">MobileViT-XS</div>
+                        <div class="arch-info">2.03M params<br>224×224 input<br>256-dim features</div>
                     </div>
-                    <div class="step completed">
-                        <div class="step-circle">2</div>
-                        <div class="step-label">Scaled<br><small>33.13M</small></div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-card">
+                        <div class="arch-icon">🔗</div>
+                        <div class="arch-label">Projection Layer</div>
+                        <div class="arch-name">MLP Bridge</div>
+                        <div class="arch-info">14.56M params<br>12 visual tokens<br>768-dim output</div>
                     </div>
-                    <div class="step completed">
-                        <div class="step-circle">3</div>
-                        <div class="step-label">Pretrained<br><small>93.01M</small></div>
-                    </div>
-                    <div class="step active">
-                        <div class="step-circle">4</div>
-                        <div class="step-label">Fine-tuned<br><small>98.51M</small></div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-card">
+                        <div class="arch-icon">📝</div>
+                        <div class="arch-label">Text Decoder</div>
+                        <div class="arch-name">DistilGPT-2</div>
+                        <div class="arch-info">81.91M params<br>Fully fine-tuned<br>Autoregressive</div>
                     </div>
                 </div>
             </div>
         </section>
-
-        <!-- Demo Samples -->
-        <section class="samples-section animate-in delay-3">
-            <div class="section-title">Demo Results (5 Random Samples)</div>
-            
-            <div class="sample-card">
-                <div class="sample-header">
-                    <div class="sample-title">
-                        <span class="sample-number">1</span>
-                        <span>Sample Image</span>
-                    </div>
-                    <span class="sample-filename">part9_050_04838_009.jpg</span>
+        
+        <!-- Metrics Section -->
+        <section class="section" id="metrics">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-label">Performance</span>
+                    <h2 class="section-title">Evaluation Metrics</h2>
+                    <p class="section-subtitle">Comprehensive benchmarks on held-out validation set</p>
                 </div>
-                <div class="sample-content">
-                    <div class="sample-image">
-                        <img src="PERSON_DATA/images/part9_050_04838_009.jpg" alt="Sample 1" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22220%22><rect fill=%22%231a1a24%22 width=%22220%22 height=%22220%22/><text fill=%22%2364748b%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22>Image</text></svg>'">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">54.23</div>
+                        <div class="metric-label">BLEU-1</div>
                     </div>
-                    <div class="sample-descriptions">
-                        <div class="desc-box generated">
-                            <div class="desc-label">Model Generated</div>
-                            <div class="desc-text">The image shows a male adult with a normal body shape and black hair. He is wearing a hat and a mask, indicating he might be dressed in a shirt or jacket. The view is from the side, and there are no visible texts or unique identifiers in the image. The person is standing.</div>
-                        </div>
-                        <div class="desc-box ground-truth">
-                            <div class="desc-label">Ground Truth</div>
-                            <div class="desc-text">The image shows a child from behind, wearing a long-sleeved shirt with the number "10" on it and dark trousers. The child is also wearing casual shoes and a hat. The pose suggests that the child is walking. There are no other visible texts or unique identifiers in the image.</div>
-                        </div>
+                    <div class="metric-card">
+                        <div class="metric-value">40.33</div>
+                        <div class="metric-label">BLEU-2</div>
                     </div>
-                </div>
-            </div>
-
-            <div class="sample-card">
-                <div class="sample-header">
-                    <div class="sample-title">
-                        <span class="sample-number">2</span>
-                        <span>Sample Image</span>
+                    <div class="metric-card">
+                        <div class="metric-value">31.57</div>
+                        <div class="metric-label">BLEU-3</div>
                     </div>
-                    <span class="sample-filename">part16_20231218001345_05258_009.jpg</span>
-                </div>
-                <div class="sample-content">
-                    <div class="sample-image">
-                        <img src="PERSON_DATA/images/part16_20231218001345_05258_009.jpg" alt="Sample 2" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22220%22><rect fill=%22%231a1a24%22 width=%22220%22 height=%22220%22/><text fill=%22%2364748b%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22>Image</text></svg>'">
+                    <div class="metric-card">
+                        <div class="metric-value">24.86</div>
+                        <div class="metric-label">BLEU-4</div>
                     </div>
-                    <div class="sample-descriptions">
-                        <div class="desc-box generated">
-                            <div class="desc-label">Model Generated</div>
-                            <div class="desc-text">The image shows a child standing with their back to the camera. The child has black hair and is wearing a long-sleeved cotton-padded coat and trousers. They are also wearing boots. There is no visible text or unique identifiers in the image.</div>
-                        </div>
-                        <div class="desc-box ground-truth">
-                            <div class="desc-label">Ground Truth</div>
-                            <div class="desc-text">The image shows a blurry, low-resolution side view of an adult female standing. She is wearing a long-sleeved, cotton-padded coat, trousers, casual shoes, and a hat. She also carries a backpack. The quality of the image makes it difficult to discern any details.</div>
-                        </div>
+                    <div class="metric-card">
+                        <div class="metric-value">42.22</div>
+                        <div class="metric-label">ROUGE-L</div>
                     </div>
-                </div>
-            </div>
-
-            <div class="sample-card">
-                <div class="sample-header">
-                    <div class="sample-title">
-                        <span class="sample-number">3</span>
-                        <span>Sample Image</span>
-                    </div>
-                    <span class="sample-filename">part7_56_00138_003.jpg</span>
-                </div>
-                <div class="sample-content">
-                    <div class="sample-image">
-                        <img src="PERSON_DATA/images/part7_56_00138_003.jpg" alt="Sample 3" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22220%22><rect fill=%22%231a1a24%22 width=%22220%22 height=%22220%22/><text fill=%22%2364748b%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22>Image</text></svg>'">
-                    </div>
-                    <div class="sample-descriptions">
-                        <div class="desc-box generated">
-                            <div class="desc-label">Model Generated</div>
-                            <div class="desc-text">The image shows an adult male walking. He is wearing a white chef's uniform with long sleeves and a white hat. His lower clothing consists of a short-sleeved shirt and black pants. He is carrying a white plastic bag in his left hand. The background appears to be a kitchen or food preparation area.</div>
-                        </div>
-                        <div class="desc-box ground-truth">
-                            <div class="desc-label">Ground Truth</div>
-                            <div class="desc-text">The image shows a male adult wearing a chef's uniform, including a short-sleeved shirt and an apron. He is also wearing a blue hairnet. The person appears to be standing and is engaged in some activity, possibly related to food preparation, as suggested by the attire.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sample-card">
-                <div class="sample-header">
-                    <div class="sample-title">
-                        <span class="sample-number">4</span>
-                        <span>Sample Image</span>
-                    </div>
-                    <span class="sample-filename">part17_20231212170733_01545_011.jpg</span>
-                </div>
-                <div class="sample-content">
-                    <div class="sample-image">
-                        <img src="PERSON_DATA/images/part17_20231212170733_01545_011.jpg" alt="Sample 4" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22220%22><rect fill=%22%231a1a24%22 width=%22220%22 height=%22220%22/><text fill=%22%2364748b%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22>Image</text></svg>'">
-                    </div>
-                    <div class="sample-descriptions">
-                        <div class="desc-box generated">
-                            <div class="desc-label">Model Generated</div>
-                            <div class="desc-text">The image shows the back of an adult male walking away from the camera. He is wearing a bright yellow baseball cap, a short-sleeved shirt with a graphic design, dark shorts, and sandals. The image quality is low, making details difficult to discern. The background is a dark gray pavement.</div>
-                        </div>
-                        <div class="desc-box ground-truth">
-                            <div class="desc-label">Ground Truth</div>
-                            <div class="desc-text">The image shows a high-angle, full shot of a person walking away from the camera. The individual is an adult male with black hair, wearing a bright yellow short-sleeved shirt and light khaki or tan shorts. He is wearing sandals and carrying a plastic bag.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sample-card">
-                <div class="sample-header">
-                    <div class="sample-title">
-                        <span class="sample-number">5</span>
-                        <span>Sample Image</span>
-                    </div>
-                    <span class="sample-filename">part5_07_03186_002.jpg</span>
-                </div>
-                <div class="sample-content">
-                    <div class="sample-image">
-                        <img src="PERSON_DATA/images/part5_07_03186_002.jpg" alt="Sample 5" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22220%22><rect fill=%22%231a1a24%22 width=%22220%22 height=%22220%22/><text fill=%22%2364748b%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22>Image</text></svg>'">
-                    </div>
-                    <div class="sample-descriptions">
-                        <div class="desc-box generated">
-                            <div class="desc-label">Model Generated</div>
-                            <div class="desc-text">A female adult with long black hair is wearing a mask and carrying a plastic bag. The view is from the front, and she appears to be standing. There is no visible text or unique identifiers in the image. The individual is wearing a patterned shirt with a geometric design.</div>
-                        </div>
-                        <div class="desc-box ground-truth">
-                            <div class="desc-label">Ground Truth</div>
-                            <div class="desc-text">The image shows a low-resolution, somewhat blurry side profile of an adult male. He is wearing a white baseball cap, a dark-colored shirt or jacket, and a light-colored face mask. He also appears to be wearing some kind of helmet or headgear under the cap.</div>
-                        </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0.83</div>
+                        <div class="metric-label">CIDEr</div>
                     </div>
                 </div>
             </div>
         </section>
+        
+        <!-- Results Section -->
+        <section class="section" id="results">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-label">Live Demo</span>
+                    <h2 class="section-title">Sample Results</h2>
+                    <p class="section-subtitle">Real-time inference results on validation images</p>
+                </div>
+                <div class="results-grid">
 
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">1</span>
+                                <span class="result-label">Sample 1</span>
+                            </div>
+                            <span class="result-filename">part9_050_04838_009.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part9_050_04838_009.jpg" alt="Person 1" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a male adult with black hair standing from behind. He is wearing short-sleeved clothing and trousers, alongwith casual shoes. There are no visible texts or unique identifiers in the photo. The activity depicted seems to be simply walking forward on what looks like an outdoor surface near some greenery suggesting another person might walk alongside him (at least one other individual has dark blue accents).</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a child from behind, wearing a long-sleeved shirt with the number "10" on it and dark trousers. The child is also wearing casual shoes and a hat. The pose suggests that the child is walking. There are no other visible texts or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">2</span>
+                                <span class="result-label">Sample 2</span>
+                            </div>
+                            <span class="result-filename">part16_20231218001345_05258_009.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231218001345_05258_009.jpg" alt="Person 2" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a person walking from behind. The individual appears to be wearing long-sleeved clothing and trousers. They have on casual shoes and are carrying something in their right hand that looks like gloves or possibly another item, but it's too blurry to identify its nature. There is no visible text or unique identifiers in the background of the individuals' attire.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows a blurry, low-resolution side view of an adult female standing.  She is wearing a long-sleeved, cotton-padded coat, trousers, casual shoes, and a hat. She also carries a backpack. The quality of the image makes it difficult to discern any details about her features or the specific style of her clothing and accessories. The background is indistinct and out of focus.  No text or unique identifiers are visible.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">3</span>
+                                <span class="result-label">Sample 3</span>
+                            </div>
+                            <span class="result-filename">part7_56_00138_003.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part7_56_00138_003.jpg" alt="Person 3" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a male adult with black hair wearing glasses and casual shoes. He is dressed in short-sleeved clothing, including what appears to be tights under his jacket and trousers. The view of the person is from behind, showing him walking while looking down at something on her desk or table near where he has some papers visible on it.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a male adult wearing a chef's uniform, including a short-sleeved shirt and an apron. He is also wearing a blue hairnet. The person appears to be standing and is engaged in some activity, possibly related to food preparation, as suggested by the attire. There is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">4</span>
+                                <span class="result-label">Sample 4</span>
+                            </div>
+                            <span class="result-filename">part17_20231212170733_01545_011.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part17_20231212170733_01545_011.jpg" alt="Person 4" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a low-resolution, slightly blurry photo of an adult male walking. He is wearing light gray short sleeves and dark shorts. His footwear appears to be sandals or flipflops; only the back portion (partially visible). The man's hair looks somewhat loose fitting with brownish detailing on his black shoulder bag he has in both hands.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here is a description of the image:
+
+The image shows a high-angle, full shot of a person walking away from the camera. 
+
+
+The individual is an adult male with black hair, wearing a bright yellow short-sleeved shirt and light khaki or tan shorts. He is wearing sandals and carrying a plastic bag (partially visible, appearing to be reddish-orange). His gait appears casual. The background is a dark gray asphalt surface. The image quality is somewhat blurry and the lighting is not very good. There is no visible text or other unique identifiers.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">5</span>
+                                <span class="result-label">Sample 5</span>
+                            </div>
+                            <span class="result-filename">part5_07_03186_002.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part5_07_03186_002.jpg" alt="Person 5" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a person standing with their back to the camera. The individual appears to be wearing long-sleeved clothing and trousers, alongwith casual shoes. They have black hair tied up in bunches near one shoulder area and are carrying two plastic bags (one white) on each side of them. There is no visible text or unique identifiers in the images.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows a low-resolution, somewhat blurry side profile of an adult male. He is wearing a white baseball cap, a dark-colored shirt or jacket, and a light-colored face mask.  He also appears to be wearing some kind of helmet or headgear under the cap.  His black hair is partially visible.  He seems to be standing and interacting with what appears to be a pile or bundle of light-colored, possibly fabric or plastic, items. The background is indistinct and blurry, with hints of what looks like more of the pale material and possibly a pinkish hue.  The overall image quality is poor, making precise detail difficult to discern. There is no visible text or unique identifiers.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">6</span>
+                                <span class="result-label">Sample 6</span>
+                            </div>
+                            <span class="result-filename">part4_13_00981_005.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part4_13_00981_005.jpg" alt="Person 6" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a group of individuals wearing matching uniforms, predominantly blue with white and red stripes on the shoulders. The focus is primarily on one individual who appears to be sitting at or near another person's shoulder area; only their back view are shown in the frame.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows the back of a young girl, likely a child, with long black hair tied up in a high ponytail.  She's wearing a white, blue, and red school uniform; the red and blue portions are visible on the lower back and shoulders, forming a V-shape. The uniform appears to be a jacket or sweater. She is seated at a table or desk, and other students are partially visible in the background, also in similar uniforms. The background is somewhat blurry but suggests a classroom setting.  No text or unique identifiers are visible.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">7</span>
+                                <span class="result-label">Sample 7</span>
+                            </div>
+                            <span class="result-filename">part17_20231212134531_00811_001.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part17_20231212134531_00811_001.jpg" alt="Person 7" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a low-resolution, blurry photo of an adult male walking. He is wearing short sleeves and shorts, sandals, glasses, casual shoes, A hat, gloves, along with carrying two plastic bags (one appears to be light gray or tan). The background quality makes it difficult to discern any details clearly; the overall impression is that he may have been in motion as well.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a blurry, low-resolution picture of a bald adult female walking. She is wearing a short-sleeved shirt and shorts.  The clothing appears to be light-colored.  Her footwear is indistinct, but described as casual shoes. The background is out of focus, showing what seems to be a paved surface.  No visible text or unique identifiers are present. The overall quality is poor, making details difficult to discern.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">8</span>
+                                <span class="result-label">Sample 8</span>
+                            </div>
+                            <span class="result-filename">part17_20231212163727_01436_002.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part17_20231212163727_01436_002.jpg" alt="Person 8" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a female adult with black hair walking away from the camera. She is wearing short-sleeved clothing and trousers, along wadded up as she walks forward. Her footwear appears to be sandals. There are no visible texts or unique identifiers in the photo.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a low-resolution, blurry photograph of an elderly man walking. He is wearing a light-colored, short-sleeved shirt and shorts, white casual shoes, and a hat.  He carries a brown shoulder bag. The image quality is poor, making details difficult to discern.  The man appears to be walking in an outdoor area, possibly a sidewalk or street, as there are indistinct shapes in the background that might be other people or buildings.  No visible text or unique identifiers are present.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">9</span>
+                                <span class="result-label">Sample 9</span>
+                            </div>
+                            <span class="result-filename">part5_04_05297_005.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part5_04_05297_005.jpg" alt="Person 9" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a person walking from the front view. The individual appears to be wearing long-sleeved clothing and trousers, along with casual shoes. They have black hair and are carrying an orange handbag in their left arm. There is no visible text or unique identifiers in the provided information. The activity depicted suggests that this might suggest they may be engaged actively activities at night on some type of surface such as pavement or ground flooring.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a side view of an adult male standing. He is wearing a dark-colored hat, a dark-colored face mask, a red vest over a dark-colored shirt, dark-colored trousers, and casual shoes.  A small, indistinct patch or logo is visible on the left sleeve of his jacket. The image quality is low, and the background is blurred and indistinct. The lighting is poor.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">10</span>
+                                <span class="result-label">Sample 10</span>
+                            </div>
+                            <span class="result-filename">part17_20231212124427_00589_005.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part17_20231212124427_00589_005.jpg" alt="Person 10" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a male adult with black hair walking. He is wearing glasses and has his arms crossed over one shoulder, suggesting he might be in an outdoor setting like near water or ice rink equipment. His upper clothing consists of short sleeves, paired with shorts that appear to have some sort of pattern on the chest area, but no specific text can be clearly identified from this angle alone. The pose suggests movement as if he's moving forward or possibly running at night (the ground appears dark-colored).</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a male adult with a normal body shape riding a scooter. He is wearing a red short-sleeved shirt with white stripes on the sleeves and collar, along with beige shorts. He has on casual shoes and is wearing a black helmet. The scooter is primarily white with red accents. The rider is holding a shoulder bag on his left side and appears to be holding a bottle in his right hand. The view is from the front, showing the rider and the front part of the scooter. There is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">11</span>
+                                <span class="result-label">Sample 11</span>
+                            </div>
+                            <span class="result-filename">part4_04_00318_015.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part4_04_00318_015.jpg" alt="Person 11" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a child sitting at what appears to be classroom desks. The boy is wearing glasses and has short black hair that covers his nose and mouth. His right arm rests on the desk, seemingly focused on something in front of him. There are other individuals partially visible behind or near the camera, but no text can possibly read from this specific information alone.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows a close-up shot of a young Asian boy, possibly a preteen or early teenager, sitting in what appears to be a classroom. He has short, black hair and is wearing a white, short-sleeved t-shirt. A small, indistinct logo or design is visible on the lower front of the shirt.  He's leaning slightly forward and appears to be looking down at something he's holding, possibly a notebook or sheet of paper.  Parts of other students, wearing light blue short-sleeved shirts, are visible in the background, suggesting a classroom setting. The background is slightly blurry, making details indistinguishable.  The boy's expression is serious or concentrated.  There is no visible text or unique identifiers besides the indistinct logo on his shirt.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">12</span>
+                                <span class="result-label">Sample 12</span>
+                            </div>
+                            <span class="result-filename">part1__042_00081_006.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part1__042_00081_006.jpg" alt="Person 12" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a child with long black hair wearing glasses and an orange jacket. The view is from behind, so facial features are not visible. There is no text or unique identifiers in the frame that can be discerned from this angle. Insightibility: No other identifying information about her clothing or accessories prevents further detail of identification as possible identity items sucherald-style sleeves and trousers.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a person wearing a yellow hard hat and an orange safety vest over a long-sleeved jacket. The individual appears to be an adult with black hair. The view is from the side, and no text or unique identifiers are visible on the clothing or helmet.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">13</span>
+                                <span class="result-label">Sample 13</span>
+                            </div>
+                            <span class="result-filename">part0_04_00219_003.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part0_04_00219_003.jpg" alt="Person 13" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows the back of a woman walking away from The camera. She has long black hair tied up in pigtails, and is wearing light pink short-sleeved shirt with an indiscernible white graphic on it (possibly Adidas). She's also carrying what appears to be dark colored pants or trousers underneath her dress which are partially visible at the bottom left corner of the frame.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows the back of a person walking away from the camera. 
+
+
+The individual is wearing a light pink jacket over a shirt, white shorts, and casual shoes. They are carrying a pink plastic bag.  Their hair is dark. The person's legs and feet are visible, and they appear to be an adult female with a normal body shape, as indicated in the provided information. The background is blurry but shows what looks like a street, with parts of vehicles and other objects indistinctly visible. The image quality is somewhat low-resolution, making details difficult to discern clearly. There is no visible text or unique identifiers in the image.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">14</span>
+                                <span class="result-label">Sample 14</span>
+                            </div>
+                            <span class="result-filename">part4_12_01863_002.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part4_12_01863_002.jpg" alt="Person 14" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a male adult with black hair and glasses standing in front of a green chalkboard. He is wearing short-sleeved clothing that appears to be light pink or peach colored, possibly partially dressed as an A/E student outfit while also holding something white on the desk behind him. The person has their hands clasped together at his waist level, suggesting he might be lecturing or presenting itigraphy from this angle.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image: The image is a still from a video, showing a man from the waist up, standing to the side and slightly angled away from the camera. He appears to be of Asian descent, middle-aged, with short black hair and glasses. He's wearing a light pink, short-sleeved collared shirt. The shirt appears to be layered over a long-sleeved undershirt, as there's a visible difference in the sleeve length and fabric. He's writing or gesturing on a dark green chalkboard with his right hand; his left hand is slightly blurred, suggesting motion. The chalkboard shows some Chinese characters written on it; at least one character is partially visible in the upper right corner, and a partial sentence or phrase in larger characters in the lower left corner which reads “我要觉得“前”也应该”. The background shows a portion of a window frame. The overall lighting is somewhat dim, typical...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">15</span>
+                                <span class="result-label">Sample 15</span>
+                            </div>
+                            <span class="result-filename">part17_20231212121900_00497_002.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part17_20231212121900_00497_002.jpg" alt="Person 15" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows an adult male with black hair wearing a short-sleeved shirt and shorts, along side of his legs. He is also carrying what appears to be plastic bags in one hand and has casual shoes on the other. The man's pose suggests he might have walking or running outdoors near some type "Coca" sign that includes Chinese characters (partially visible).</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows a low-resolution, close-up view of a plus-size woman from the side. She's standing, partially obscured by what seems to be an awning or overhang.  She's wearing a short-sleeved dark-colored top with a light-colored pattern that is indistinct. Her lower body is clad in light blue denim shorts. She is wearing light-colored sandals. Only her legs and torso are clearly visible; her face and upper body are mostly hidden behind the overhang.  Part of a red Coca-Cola cooler is visible in the lower right corner.  The background is blurry but suggests an outdoor setting, potentially a store or market. The overall quality of the image is poor, making details difficult to discern.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">16</span>
+                                <span class="result-label">Sample 16</span>
+                            </div>
+                            <span class="result-filename">part4_10_00424_008.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part4_10_00424_008.jpg" alt="Person 16" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a child with black hair wearing glasses and an orange shirt. The view is from the front, focusing on one hand while looking down at something in their hands. There are no visible texts or unique identifiers in the frame. Another person's arm rests close to her chest area, suggesting she might be sitting next door or perhaps interacting closely with someone else (possibly another individual).</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a child with black hair, viewed from the front. The child is wearing a shirt and has their arms crossed. There is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">17</span>
+                                <span class="result-label">Sample 17</span>
+                            </div>
+                            <span class="result-filename">part16_20231211220637_03084_014.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231211220637_03084_014.jpg" alt="Person 17" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a person standing indoors. The individual appears to be wearing an orange long-sleeved cotton-padded coat with black accents on the shoulders and sleeves. They have casual shoes in their right hand, suggesting they mightbe related to work or some type of activity involving clothing items on campus such as desks and possibly other objects that are not clearly visible duelling conditions at night.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here is a description of the image:
+
+The image shows a low-resolution, blurry still from a security camera.  It depicts a person, described as a female adult, standing in what appears to be an indoor location with light-colored walls. The individual is wearing a dark-colored, long-sleeved, cotton-padded coat with a fur-trimmed hood that obscures much of their face.  They also wear dark-colored trousers and casual shoes.  A dark-colored hat is visible under the hood. Part of an orange object is visible in the lower right corner; its nature is unclear.  The overall quality of the image is poor, making detailed identification difficult.  No visible text or unique identifiers are present.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">18</span>
+                                <span class="result-label">Sample 18</span>
+                            </div>
+                            <span class="result-filename">part17_20231213051605_04196_002.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part17_20231213051605_04196_002.jpg" alt="Person 18" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a female adult with black hair walking. She is wearing short sleeves and shorts, paired with sandals. The background includes shelves stocked with various items such as bananas and other vegetables, suggesting she might be near at some kind of market or stall setting in the distance. There are no visible texts or unique identifiers in the photo. The person appears to be carrying something small on her shoulder that looks like groceries cartons from behind them. Her footwear consists of casual shoes.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows the back of an adult male standing in what appears to be a store or market. He is wearing a short-sleeved shirt, teal shorts, and sandals. He is carrying a shoulder bag.  Multiple yellow egg cartons are visible on the floor around him.  Part of a sign is visible in the upper right corner; only the letter “D” is clearly legible.  The floor appears to be tiled. The overall lighting is dim.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">19</span>
+                                <span class="result-label">Sample 19</span>
+                            </div>
+                            <span class="result-filename">part4_04_00112_004.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part4_04_00112_004.jpg" alt="Person 19" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a child with black hair wearing glasses and long-sleeved clothing. The view is from the front, showing individual appears to be seated at what looks like an indoor desk or table in green foliage. There are no visible texts or unique identifiers in the provided information. There is No text other than possibly some illegible writing on one of their desks (which seems to be part thereof).</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows a close-up front view of a young adult female with long black hair pulled back. She is wearing glasses and a light gray and blue zip-up jacket over a white shirt.  She appears to be sitting at a wooden desk and is focused on something in her hands, which seem to be a piece of paper or a book.  The setting appears to be indoors, possibly a classroom, given the simple desk and the casual nature of her attire.  No text is visible other than possibly some very indistinct print on the object she is holding.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">20</span>
+                                <span class="result-label">Sample 20</span>
+                            </div>
+                            <span class="result-filename">part1__090_00172_001.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part1__090_00172_001.jpg" alt="Person 20" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a blurry, low-resolution picture of an adult male walking. He is wearing dark trousers and appears to be carrying something small in his right hand (viewer's left). His hair has black spots that appear to have some sort of pattern or texture on it. The background features what looks like part of another person partially visible at the bottom; they are out but seem to show other people possibly nearby as well.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a low-resolution, blurry picture of an adult male walking. He appears to be wearing a long-sleeved jacket with light-colored (possibly green or light yellow) outer layer and dark trousers.  His hair is dark, and he is seen from the side.  The background is out of focus but appears to include some greenery, possibly plants. The image quality is poor, making details difficult to discern.  No visible text or other unique identifiers are present.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">21</span>
+                                <span class="result-label">Sample 21</span>
+                            </div>
+                            <span class="result-filename">part15_00847_008.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part15_00847_008.jpg" alt="Person 21" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a blurry, low-resolution picture of an adult woman walking. She has black hair and is wearing glasses. Her clothing consists of short sleeves under the hood, dark trousers or leggings with white stripes down each side, casual shoes (possibly Adidas), gloves, along with leather feet which are mostly obscured by her lower body posture due to shadows on it.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here is a description of the image:
+
+The image shows the back of a woman walking. She has long black hair and is wearing a short-sleeved black dress with a white collar, a short denim skirt, jeans underneath the skirt, and sandals. She carries a light pink shoulder bag. The setting appears to be indoors, perhaps a store or hallway, with some colorful elements visible in the background.  The image is somewhat blurry and low resolution. No visible text or unique identifiers are present.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">22</span>
+                                <span class="result-label">Sample 22</span>
+                            </div>
+                            <span class="result-filename">part4_10_00439_008.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part4_10_00439_008.jpg" alt="Person 22" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a child with black hair wearing glasses and appears to be sitting at what looks like an indoor setting, possibly in school or crowded area. The view is from the side, capturing several individuals who seem to have their hands behind them. There are no visible texts/ unique identifiers in the frame.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows a close-up side profile of a young boy.  He appears to be of Asian descent, with short black hair and is wearing glasses. He's wearing an orange long-sleeved shirt with a red collar or trim visible.  His expression is somewhat serious or neutral.  The boy is partially obscured by other children, only his head and shoulders are clearly visible.  The background is blurry and indistinct, suggesting a possibly crowded indoor setting, like a classroom or daycare.  There is no visible text or unique identifiers in the image.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">23</span>
+                                <span class="result-label">Sample 23</span>
+                            </div>
+                            <span class="result-filename">part10_16_01629_003.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part10_16_01629_003.jpg" alt="Person 23" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a male adult with black hair wearing glasses and standing in what appears to be an indoor setting, possibly near water. He is dressed in short-sleeved clothing that includes leather shoes. The person has their arms crossed over his chest as if he might use one of the handles or another object on them while looking down at something they are holding open behind him. There's no visible text other than some indistinct objects inside it which may suggest someone else was present during this interaction.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here is a description of the image:
+
+The image shows a high-angle, close-up view of an adult male with black hair, wearing a dark-colored short-sleeved shirt and a white face mask.  He is bending over, his hands are involved in some activity that is unclear, but appears to involve handling something near a light-colored surface. The background is a plain, off-white wall or ceiling.  The lighting is somewhat dim and the image quality is not sharp.  No visible text or unique identifiers are present.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">24</span>
+                                <span class="result-label">Sample 24</span>
+                            </div>
+                            <span class="result-filename">part16_20231217222130_04665_009.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231217222130_04665_009.jpg" alt="Person 24" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a person standing outdoors. The individual appears to be wearing long-sleeved clothing and trousers, along with boots. They have on gloves and are carrying something in their right hand that resembles an umbrella or similar object around them (possibly cloth). There is no visible text/image quality other than what might be part of the garment's style but it seems like they may also wear glasses as well.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a low-resolution, blurry side view of an adult male standing. He is wearing a black, long-sleeved, cotton-padded coat, orange trousers, a black knit hat with a white stripe, and casual shoes.  The image quality is poor, making details difficult to discern.  The man's face is mostly obscured by the hat and the low image quality.  The background is a blurred, indistinct beige or light brown. No visible text or unique identifiers are present.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">25</span>
+                                <span class="result-label">Sample 25</span>
+                            </div>
+                            <span class="result-filename">part5_06_04962_004.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part5_06_04962_004.jpg" alt="Person 25" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows the back of an adult male walking. He has black hair and is wearing a dark navy blue jacket or sweatshirt, gray trousers, casual shoes, glasses, A face mask obscures his mouth and nose. The background appears to be indoors with some sort of patterned flooring visible in what looks like particle-like light brown furniture (possibly wood).</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows the back view of an elderly male with a normal body shape. He is wearing a hat and a shirt. The person appears to be standing. There is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">26</span>
+                                <span class="result-label">Sample 26</span>
+                            </div>
+                            <span class="result-filename">part9_079_02138_008.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part9_079_02138_008.jpg" alt="Person 26" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a child standing. The individual appears to be wearing long-sleeved clothing and trousers, along with casual shoes. They have black hair and are carrying something in their hand that looks like an umbrella or similar item near them. There is no visible text on the back of each person's head as they appear to be dressed for cold weather conditions.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a child standing outdoors. The child appears to be wearing a short-sleeved shirt and trousers. The background includes some greenery and what looks like a body of water. There is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">27</span>
+                                <span class="result-label">Sample 27</span>
+                            </div>
+                            <span class="result-filename">part4_09_00036_003.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part4_09_00036_003.jpg" alt="Person 27" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a child with black hair sitting at what appears to be an desk in front of them. The view is from the side, and there are no visible texts or unique identifiers in the picture. There isno other text or identifying information present on this individual's clothing besides possibly some writing that might suggest another person may have been seated behind her back, which could indicate she was holding something small inside their hands (possibly food). Inspection suggests cold weather conditions.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image is a close-up shot of a young Asian girl, appearing to be of elementary school age. She has long black hair pulled back, and she's wearing glasses. Her body is thin, and she's dressed in a maroon or dark red long-sleeved shirt. The background shows other children, also appearing to be in a classroom setting, wearing similar maroon-colored shirts. The lighting is somewhat dim, and the focus is primarily on the girl in the foreground. Parts of desks or tables are visible in the lower portion of the image.  There is no visible text or unique identifiers other than the clothing.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">28</span>
+                                <span class="result-label">Sample 28</span>
+                            </div>
+                            <span class="result-filename">part1__005_00020_006.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part1__005_00020_006.jpg" alt="Person 28" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a male adult with black hair wearing glasses and long-sleeved clothing. He is dressed in casual shoes, including what appears to be an orange safety vest over his jacket. The person has on leather footwear that looks like dark trousers or leggings. There are no visible texts or unique identifiers in the background as indicated by this location's appearance and lighting conditions. The activity depicted is simply standing upright at night.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows a side view of an adult male standing. He's wearing a bright lime green safety vest over a dark-colored shirt and jacket. His trousers are dark, and he's wearing casual shoes.  His hair is dark, and he's wearing a mask that obscures his mouth and nose. The man appears to be working, as suggested by his attire and the somewhat blurred background that seems to be an outdoor work environment.  No text or unique identifiers are visible.  The image quality is somewhat poor, making details difficult to discern.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">29</span>
+                                <span class="result-label">Sample 29</span>
+                            </div>
+                            <span class="result-filename">part16_20231218012407_00283_011.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231218012407_00283_011.jpg" alt="Person 29" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a blurry, low-resolution photo of an adult male standing. He is wearing dark clothing and trousers, along with boots. He also has on gloves and carries something small in his hands (possibly plastic) which appears to be rectangular or possibly light brownish due to the poor quality. The background features indistinct shapes that could include other people but not clearly identifiable elements such as bags or containers at night based on their size and color scheme.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows an adult male standing outdoors. He is wearing a long-sleeved shirt under a cotton-padded coat and dark trousers. On his head, he has a beanie hat, and he is wearing black boots. The background appears to be a snowy environment, suggesting cold weather. There are no visible texts or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">30</span>
+                                <span class="result-label">Sample 30</span>
+                            </div>
+                            <span class="result-filename">part16_20231218010940_00206_013.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231218010940_00206_013.jpg" alt="Person 30" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a person standing indoors. The individual appears to be wearing long-sleeved clothing and trousers, along with casual shoes. They have on gloves and are holding what looks like another object in their right hand near the back of the frame, possibly giving it some context or explanation. There is no visible text or unique identifiers in the photo.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a female adult standing indoors. She is wearing a white hat and gloves, indicating cold weather. Her upper clothing consists of a long-sleeved shirt under a cotton-padded coat, paired with dark trousers. She is also wearing black boots. The person appears to be holding something in her hands, possibly a piece of paper or a small object, but it is not clearly identifiable. There are no visible texts or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">31</span>
+                                <span class="result-label">Sample 31</span>
+                            </div>
+                            <span class="result-filename">part9_048_06227_025.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part9_048_06227_025.jpg" alt="Person 31" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a low-resolution, blurry photo of an adult woman standing. She has long black hair and is wearing glasses. Her clothing consists of short sleeves (possibly white or light gray), trousers, casual shoes, sandals, two plastic shopping bags; one appears to be orange in color with some darker markings on the front that could read "ROCK" but it's too unclear to decipher clearly due not clear identification marks near her face.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows an elderly male with a bald head, viewed from behind. He is wearing short-sleeved clothing and trousers. His footwear appears to be casual shoes, and he has a backpack on. The pose suggests that he is walking. There is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">32</span>
+                                <span class="result-label">Sample 32</span>
+                            </div>
+                            <span class="result-filename">part5_07_06201_004.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part5_07_06201_004.jpg" alt="Person 32" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a low-resolution, blurry side view of an adult male walking. He has black hair and is wearing dark trousers (though details are obscured by the poor quality), casual shoes, glasses, A mask that obscures most of his face. The background appears to be indoors with some indistinct shapes or designs visible in front of him; however it's difficult to discern any further specifics about this subject itself due primarily to blurriness on one leg and shadowing from behind as he.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here is a description of the image:
+
+The image shows a low-resolution, blurry side profile of a dark-skinned adult male. He appears to be standing and is wearing a dark-colored shirt or jacket, dark-colored trousers, and jeans.  He is also wearing a mask that obscures part of his face, making facial features indistinct.  The background is out of focus and shows what seems to be an indoor setting possibly a store or a public space. No text or unique identifiers are visible in the image. The overall quality is poor, making detailed observation difficult.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">33</span>
+                                <span class="result-label">Sample 33</span>
+                            </div>
+                            <span class="result-filename">part17_20231212210405_02405_007.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part17_20231212210405_02405_007.jpg" alt="Person 33" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a young girl walking. She has long black hair and is wearing an orange short-sleeved shirt with some indiscernible text on it, light blue denim shorts, sandals, glasses, and carrying what appears to be white paper or similar items in her right hand.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here is a description of the image:
+
+The image shows a low-resolution, somewhat blurry, still image of an adult woman walking.  The woman has dark hair and is wearing a short-sleeved, multicolored patterned dress. The dress appears to be a loose-fitting style, and the pattern is somewhat abstract and difficult to discern clearly due to the image quality. She is wearing sandals.  The background is indistinct, appearing to be an outdoor setting, possibly a sidewalk or paved area. The overall image quality is poor, making detailed observation difficult.  There is no visible text or unique identifiers.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">34</span>
+                                <span class="result-label">Sample 34</span>
+                            </div>
+                            <span class="result-filename">part16_20231217214110_04454_002.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231217214110_04454_002.jpg" alt="Person 34" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows the back of a child wearing light-colored, long-sleeved cottonroused coat. The clothing appears to be padded and bulky due to its weight (though details are difficult to discern). A backpack is visible on their side; only part of it or another person's arm has been clearly seen in front of them. A portion seems dark blueish colored pants with lighter stripes down each leg that appear yellow/brown respectively near the bottom hemline.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows the back of a child wearing a dark-colored, long-sleeved, cotton-padded coat, trousers, and boots. The child is also wearing a hat.  The image is blurry and low resolution, making details difficult to discern. The child appears to be standing.  No text or unique identifiers are visible.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">35</span>
+                                <span class="result-label">Sample 35</span>
+                            </div>
+                            <span class="result-filename">part5_10_05790_002.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part5_10_05790_002.jpg" alt="Person 35" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a person walking from behind. The individual appears to be wearing long-sleeved clothing and trousers. They have black hair, are carrying an umbrella over their right shoulder, as suggested by the provided information about them on what they might do with it in front of them. There is no visible text or unique identifiers in the upper left corner of the frame. The activity depicted suggests that this could be partially dressed casual shoes like leather sneakers or sandals.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a person from behind as they walk. The individual appears to be an adult with a normal body shape and black hair. They are wearing a shirt and trousers and are carrying a shoulder bag. There is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">36</span>
+                                <span class="result-label">Sample 36</span>
+                            </div>
+                            <span class="result-filename">part16_20231217215222_04512_020.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231217215222_04512_020.jpg" alt="Person 36" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a child standing. The individual appears to be wearing long-sleeved clothing and trousers, along with casual shoes. They have on an orange hat that covers their head and face, while carrying two plastic bags in one hand. There is no visible text or unique identifiers in the frame. The activity depicted suggests they are engaged actively dressed for safety purposes; however this may not be clearly defined due forward view of the person's body shape and posture.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here is a description of the image:
+
+The image shows a blurry, low-resolution side view of an adult female standing. She is wearing a salmon-colored, long-sleeved, cotton-padded coat, dark-colored trousers, and casual shoes. She also has a hat and gloves on. The image is quite grainy and the details are not sharp, making it difficult to discern precise features or clothing details.  The background is indistinct and out of focus.  There is no visible text or unique identifiers.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">37</span>
+                                <span class="result-label">Sample 37</span>
+                            </div>
+                            <span class="result-filename">part16_20231217230413_04889_014.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231217230413_04889_014.jpg" alt="Person 37" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a full shot of an adult male standing outdoors. He is wearing: A dark-colored, long coat that appears to be cotton-padded or padded over trousers. The jacket has some lighter colored text on the back and darker pants underneath it (partially visible). His footwear consists of casual shoes; he's carrying something light purple in his right hand which looks like possibly another bag under his arm as well.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows an adult female with a normal body shape standing outdoors. She is wearing a hat and gloves, indicating cold weather. Her upper clothing consists of a long-sleeved shirt under a cotton-padded coat, paired with trousers. She has casual shoes on her feet and is carrying a backpack. The view is from the front, and there is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">38</span>
+                                <span class="result-label">Sample 38</span>
+                            </div>
+                            <span class="result-filename">part15_00346_005.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part15_00346_005.jpg" alt="Person 38" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a male adult with black hair wearing glasses. He is dressed in short-sleeved upper clothing and shorts, paired with casual shoes. The view of the person appears to be from behind, as there are no visible texts or unique identifiers in the background that can be discerned from this angle.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a low-quality, blurry photograph of a Black man standing.  He is wearing a white short-sleeved t-shirt, dark-colored trousers, and a dark-colored baseball cap. He appears to be holding something dark and rectangular in his hands, which is partially obscured. He is partially obscured by another person in a gray shirt who is bent over in front of him. The background is out of focus but appears to be an indoor or outdoor space with a light-colored wall or surface visible. The image is poorly lit and lacks detail. There is no discernible text or unique identifiers in the image.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">39</span>
+                                <span class="result-label">Sample 39</span>
+                            </div>
+                            <span class="result-filename">part16_20231218013449_00340_010.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231218013449_00340_010.jpg" alt="Person 39" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a blurry, low-resolution photo of an adult male standing. He is wearing dark gloves and appears to be holding something small in his right hand (viewer's left). He has black hair styled up with bangs that are mostly obscured by what looks like light skin on the lower portion of his head or shoulders. His trousers appear to be casual shoes which can't clearly identify due as they're partially visible under their clothing hooded sweatshirt.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a low-resolution, poorly lit shot of an adult female standing. She is wearing a dark-colored, long-sleeved, cotton-padded coat, dark trousers, a hat, and casual shoes. Her arm is raised slightly. The background is a plain, light-colored wall.  The image quality is blurry and lacks detail. No text or unique identifiers are visible.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">40</span>
+                                <span class="result-label">Sample 40</span>
+                            </div>
+                            <span class="result-filename">part16_20231217225452_04840_005.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231217225452_04840_005.jpg" alt="Person 40" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a blurry, low-resolution picture of an adult female from the side. She is wearing long sleeves and trousers with dark detailing on their shoulders, boots (obscuring her hair), gloves, glasses, a hat (only partially visible underneath). The background appears to be outdoors or in what looks like snowy conditions.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a person standing with their back to the camera. The individual appears to be wearing a long-sleeved cotton-padded coat and trousers. They have on boots as footwear. The person's hair is long and black. There is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">41</span>
+                                <span class="result-label">Sample 41</span>
+                            </div>
+                            <span class="result-filename">part9_049_07631_013.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part9_049_07631_013.jpg" alt="Person 41" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a male adult with black hair walking away from the camera. He is wearing long-sleeved clothing and trousers. The background appears to be an outdoor setting, possibly near water or some other structures that could suggest he might participate in construction work nearby. There are no visible texts or unique identifiers in the picture.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a male adult with a normal body shape and bald hair. The view is from behind, and he is wearing short-sleeved clothing and trousers. He also has leather shoes on. The activity depicted is standing. There is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">42</span>
+                                <span class="result-label">Sample 42</span>
+                            </div>
+                            <span class="result-filename">part15_00853_007.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part15_00853_007.jpg" alt="Person 42" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a female adult with black hair walking. She is wearing short-sleeved top and trousers, paired with casual shoes. The background appears to be an outdoor setting possibly near some greenery or plants that are visible in the blurry distance of her from behind.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows the back of a young boy walking. He has short black hair and is wearing a light beige or off-white short-sleeved t-shirt and light khaki or beige trousers. He's wearing casual shoes, though the details are not clear.  The boy appears to be of normal build. The background is blurred, showing other people and what seems to be an outdoor setting, possibly a street or walkway.  The image quality is somewhat low resolution. No visible text or unique identifiers are present.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">43</span>
+                                <span class="result-label">Sample 43</span>
+                            </div>
+                            <span class="result-filename">part5_07_01270_009.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part5_07_01270_009.jpg" alt="Person 43" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a low-resolution security camera still of an adult female walking. She has black hair and is wearing glasses. Her clothing consists of dark trousers, casual shoes, a white face mask that covers her nose and mouth, A light blue surgical cap with some indiscernible text or logo on it (partially visible), gloves, along the front pocket/shoulder area.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here is a description of the image:
+
+The image shows a full-body, front view of an elderly woman walking.  She is wearing a dark-colored, possibly black, suit jacket and trousers. Underneath, a light-colored shirt is slightly visible at the collar. She has black hair and is wearing a light blue face mask. The image quality is low resolution, making fine details difficult to discern. The background is blurry but appears to be an indoor setting with a tiled or patterned floor.  No visible text or unique identifiers are present in the image.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">44</span>
+                                <span class="result-label">Sample 44</span>
+                            </div>
+                            <span class="result-filename">part16_20231212021411_03563_001.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part16_20231212021411_03563_001.jpg" alt="Person 44" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a full shot of an adult female walking. She is wearing: A dark-colored knit hat with long sleeves, which appears to be cotton-padded coat over lighter colored trousers. The scarf has small light dots near the bottom hem; it looks like some kind or markings are visible on what might be underneath them (possibly stripes).</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows a full frontal view of an adult female standing indoors. She is wearing a brown, cotton-padded long-sleeved coat, dark trousers, and dark boots.  A large, plaid scarf in shades of brown, beige, and off-white is wrapped around her neck and hangs down to mid-thigh. She also wears a brown hat that covers most of her head and obscures her hair.  Her expression is partially visible and appears to be a grimace or a somewhat strained look.  She seems to be holding something small and light-colored in her right hand, close to her chest. The background is a plain, light-colored wall.  No text or unique identifiers are visible.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">45</span>
+                                <span class="result-label">Sample 45</span>
+                            </div>
+                            <span class="result-filename">part17_20231212133204_00762_001.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part17_20231212133204_00762_001.jpg" alt="Person 45" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a person walking away from the camera. The individual appears to be an adult with normal body shape and black hair. They are wearing short-sleeved upper clothing, dark shorts, casual shoes, glasses (one is partially visible), and carrying what looks like another bag in their right hand near them. There seems to be some text or unique identifiers on items at the bottom of frame that could possibly read "东北2-4".</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows the back of a young woman walking.  She's wearing a pleated green and white plaid skirt, a white short-sleeved shirt, a tan or beige backpack, and what appears to be white sandals or sneakers.  She has long dark hair.  A portion of what looks like a light-colored jacket or sweater is visible over her shirt. The setting appears to be outdoors, near a red door or building. The image quality is somewhat low resolution and slightly blurry.  There is no visible text or unique identifiers.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">46</span>
+                                <span class="result-label">Sample 46</span>
+                            </div>
+                            <span class="result-filename">part1__070_00039_004.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part1__070_00039_004.jpg" alt="Person 46" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a person standing and facing away from the camera. The individual appears to be wearing an orange chef's uniform, including short sleeves and trousers. They have on casual shoes that are red with white stripes down their sides, suggesting they might possibly wear them in food preparation or similar activities such as cooking dishes or preparing ingredients for desserts. There is no visible text at all of these items aside from what looks like some kitchen equipment (possibly utensils).</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a male adult with black hair wearing a chef's uniform and a hat. He also has a face mask on. The view is from the front, and he appears to be standing near a kitchen counter. On the counter, there is a wooden cutting board, a metal bowl, and some kitchen towels. In the foreground, there is a basket containing what looks like bread slices. The setting suggests a professional kitchen environment.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">47</span>
+                                <span class="result-label">Sample 47</span>
+                            </div>
+                            <span class="result-filename">part15_00758_004.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part15_00758_004.jpg" alt="Person 47" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows the back of an adult male riding a scooter. He is wearing glasses and has black hair, though only part of his face or body are visible in the frame. He's dressed in long-sleeved clothing that appears to be green/black trousers with some illegible text on it (possibly Chinese characters). The man also wears casual shoes; one white Nike sneakers seems to have dark trim at midsection but details about them can't be seen from this angle alone.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here is a description of the image:
+
+The image shows the back of an adult male with black hair, wearing a black short-sleeved shirt and blue jeans.  He is sitting on a red and black Yamaha scooter, which is visible from the rear. His feet are resting on the scooter's footrests, partially obscuring the view of his shoes.  He appears to be stopped at a pedestrian crossing.  In the background, there are other people, including a man wearing a light blue shirt, and some buildings and trees. A partially visible sign with Chinese characters is present on a building in the background.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">48</span>
+                                <span class="result-label">Sample 48</span>
+                            </div>
+                            <span class="result-filename">part17_20231213073907_04719_002.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part17_20231213073907_04719_002.jpg" alt="Person 48" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows a person from behind as they walk away from the camera. The individual appears to be an adult with black hair and is wearing short-sleeved upper clothing, shorts, sandals, and carrying something in their right hand that looks like paper or some sort of object on its side. There are no visible texts or unique identifiers in the background due theretofore. The activity depicted suggests movement forward while walking.</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here's a description of the image:
+
+The image shows the back of a young woman walking away from the camera. She has short black hair and is wearing a light gray short-sleeved shirt with a dark gray design on the back that partially reads "WESTERN".  The shirt appears to have a band or logo design. She's also wearing light-colored shorts and sandals. The background is blurry, showing a gray wall or building. The overall quality of the image is somewhat low resolution, making some details indistinct. The woman's gait appears casual, and her expression isn't visible.
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">49</span>
+                                <span class="result-label">Sample 49</span>
+                            </div>
+                            <span class="result-filename">part5_05_02372_009.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part5_05_02372_009.jpg" alt="Person 49" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows the back of an adult male standing. He is wearing a white short-sleeved t-shirt, dark trousers, and casual shoes. The man has black hair styled up into neat bunches that appear to be part of his body shape or similar style. His hands are near what seems to be some kind OF rack with various items on it (possibly baskets).</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">The image shows a male adult with black hair standing from behind. He is wearing a white long-sleeved shirt and blue jeans. A face mask is visible on his face. The background appears to be indoors, possibly in a kitchen or similar setting, as there are some objects that resemble kitchen items. There is no visible text or unique identifiers in the image.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-num">
+                                <span class="result-badge">50</span>
+                                <span class="result-label">Sample 50</span>
+                            </div>
+                            <span class="result-filename">part17_20231212172707_01616_012.jpg</span>
+                        </div>
+                        <div class="result-body">
+                            <img class="result-image" src="PERSON_DATA/images/part17_20231212172707_01616_012.jpg" alt="Person 50" onerror="this.style.background='linear-gradient(135deg, #0d1025, #060710)';">
+                            <div class="result-content">
+                                <div class="desc-box generated">
+                                    <div class="desc-label">● Generated</div>
+                                    <div class="desc-text">The image shows the back of a young adult woman walking away from the camera. She has long black hair tied up in bunches, and is wearing dark-colored shorts with white stripes down each side. The pattern appears to be an abstract or geometric print on some kind of fabric that looks like textured material at night (possibly cotton).</div>
+                                </div>
+                                <div class="desc-box ground-truth">
+                                    <div class="desc-label">● Ground Truth</div>
+                                    <div class="desc-text">Here is a description of the image:
+
+The image shows the back of a young woman walking. She has long, black hair and is wearing a white short-sleeved shirt, a green and white plaid skirt that falls to her mid-calf, and casual shoes with socks. She's carrying a tan Coach backpack with a visible Coach logo.  She also carries a white shopping bag in her left hand. The view is from behind, and she is walking away from the camera.  The background is somewhat blurry, showing a portion of a brick wall and another person's legs.  The floor is light-colored tile.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+        
         <!-- Footer -->
         <footer class="footer">
-            <p class="footer-text">Generated on January 26, 2026 | PersonVLM Fine-tuned v2 | Tesla V100 GPU</p>
+            <div class="footer-logo">
+                <div class="footer-logo-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                </div>
+                <span class="footer-logo-text">PersonVLM</span>
+            </div>
+            <p class="footer-text">Generated on January 27, 2026 at 20:09 · Powered by Tesla V100 GPU</p>
             <div class="footer-links">
-                <a href="https://github.com/rishi02102017/PersonVLM" class="footer-link">GitHub Repository</a>
-                <a href="README.md" class="footer-link">Documentation</a>
+                <a href="https://github.com/rishi02102017/PersonVLM" class="footer-link">GitHub</a>
+                <a href="#architecture" class="footer-link">Architecture</a>
+                <a href="#metrics" class="footer-link">Metrics</a>
+                <a href="#results" class="footer-link">Results</a>
             </div>
         </footer>
     </div>
+    
+    <script>
+        // Particle Animation
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const particleCount = 80;
+        const connectionDistance = 150;
+        
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2 + 1;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(79, 143, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+        
+        function init() {
+            resize();
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+        
+        function drawConnections() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < connectionDistance) {
+                        const opacity = (1 - dist / connectionDistance) * 0.15;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(79, 143, 255, ${opacity})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+        
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            
+            drawConnections();
+            requestAnimationFrame(animate);
+        }
+        
+        window.addEventListener('resize', () => {
+            resize();
+        });
+        
+        init();
+        animate();
+        
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+        
+        // Animate elements on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.animate-in').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
 </body>
 </html>

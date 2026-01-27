@@ -9,8 +9,10 @@ checkpoints_pretrained_v2/
 *.pt
 *.pth
 
-# Report (kept local)
+# Reports and old docs (kept local)
 Report.tex
+Old-README.md
+Old-Report.tex
 
 # Training artifacts
 TRAINING_BEST_PRACTICES.md
