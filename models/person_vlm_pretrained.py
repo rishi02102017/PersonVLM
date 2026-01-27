@@ -293,7 +293,8 @@ class PersonVLMPretrained(nn.Module):
         - Leading fragments ("of", ",", "(presumably", etc.)
         - Lowercase first letter
         - Incomplete sentences
-        - Repeated phrases
+        - Repeated phrases and sentences
+        - Cut-off endings
         """
         import re
         
@@ -303,11 +304,16 @@ class PersonVLMPretrained(nn.Module):
         if not text:
             return "The image shows a person."
         
+        # Remove bullet points and list markers
+        text = re.sub(r'^\s*[\*\-\•]\s*', '', text, flags=re.MULTILINE)
+        text = re.sub(r'\n\s*[\*\-\•]\s*', ' ', text)
+        text = re.sub(r'\s*[\*\-\•]\s+', ' ', text)
+        
         # Remove common leading fragments that indicate incomplete generation
         fragment_patterns = [
             r'^[\(\[\{].*?[\)\]\}]\s*',  # Remove leading parenthetical/bracket content
             r'^[,;:]\s*',                 # Remove leading punctuation
-            r'^(of|and|or|but|with|in|on|at|to|for|from|by)\s+',  # Remove leading prepositions/conjunctions (case insensitive)
+            r'^(of|and|or|but|with|in|on|at|to|for|from|by)\s+',  # Remove leading prepositions/conjunctions
             r'^[-–—]\s*',                 # Remove leading dashes
             r'^\.\s*',                    # Remove leading periods
         ]
@@ -335,43 +341,127 @@ class PersonVLMPretrained(nn.Module):
         has_proper_start = any(text_lower.startswith(start) for start in proper_starts)
         
         if not has_proper_start:
-            # Check if it starts with a descriptor that could be a valid start
             valid_descriptor_starts = ['adult', 'male', 'female', 'young', 'child', 'person', 'man', 'woman', 'boy', 'girl']
             starts_with_descriptor = any(text_lower.startswith(desc) for desc in valid_descriptor_starts)
             
             if starts_with_descriptor:
                 text = "The image shows " + text[0].lower() + text[1:]
-            elif not text_lower.startswith(('i ', 'you ')):  # Avoid "I" or "You" starts
-                # For other cases, prepend proper start
+            elif not text_lower.startswith(('i ', 'you ')):
                 text = "The image shows " + text[0].lower() + text[1:]
         
-        # Remove duplicate consecutive sentences/phrases
-        sentences = text.split('. ')
-        seen = set()
+        # Split into sentences for processing
+        # Use regex to split on sentence boundaries while preserving the delimiter
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        
+        # Remove duplicate sentences (case-insensitive comparison)
+        seen_sentences = set()
         unique_sentences = []
         for sent in sentences:
-            sent_normalized = sent.strip().lower()
-            if sent_normalized and sent_normalized not in seen:
-                seen.add(sent_normalized)
-                unique_sentences.append(sent.strip())
-        text = '. '.join(unique_sentences)
+            sent = sent.strip()
+            if not sent:
+                continue
+            sent_normalized = sent.lower().rstrip('.!?')
+            if sent_normalized not in seen_sentences:
+                seen_sentences.add(sent_normalized)
+                unique_sentences.append(sent)
         
-        # Ensure proper ending
+        # Remove sentences that are substrings of previous sentences (partial repeats)
+        filtered_sentences = []
+        for i, sent in enumerate(unique_sentences):
+            sent_norm = sent.lower().rstrip('.!?')
+            is_substring = False
+            for prev_sent in filtered_sentences:
+                prev_norm = prev_sent.lower().rstrip('.!?')
+                if sent_norm in prev_norm or prev_norm in sent_norm:
+                    # Keep the longer one
+                    if len(sent_norm) > len(prev_norm):
+                        filtered_sentences.remove(prev_sent)
+                        filtered_sentences.append(sent)
+                    is_substring = True
+                    break
+            if not is_substring:
+                filtered_sentences.append(sent)
+        
+        text = ' '.join(filtered_sentences)
+        
+        # Remove common repetitive phrases that appear multiple times
+        repetitive_phrases = [
+            r'(There is no visible text or unique identifiers? in the image\.?\s*){2,}',
+            r'(The activity depicted is simply standing\.?\s*){2,}',
+            r'(No text or unique identifiers? (?:is|are) visible\.?\s*){2,}',
+            r'(The background is (?:blurry|out of focus)\.?\s*){2,}',
+        ]
+        for pattern in repetitive_phrases:
+            # Keep only one occurrence
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                # Replace multiple occurrences with single
+                text = re.sub(pattern, match.group(1), text, flags=re.IGNORECASE)
+        
+        # Handle incomplete final sentences
+        # Find the last complete sentence (ending with .!?)
         text = text.rstrip()
-        if text and text[-1] not in '.!?':
-            # Check if the last sentence is incomplete (ends mid-word or with conjunction)
-            last_words = text.split()[-3:] if len(text.split()) >= 3 else text.split()
-            incomplete_endings = ['the', 'a', 'an', 'and', 'or', 'but', 'with', 'in', 'on', 'to', 'is', 'are', 'was', 'were', 'has', 'have', 'no']
-            
-            if last_words and last_words[-1].lower() in incomplete_endings:
-                # Remove incomplete ending
+        
+        # If text ends with punctuation, we're good
+        if text and text[-1] in '.!?':
+            pass
+        else:
+            # Find the last sentence boundary
+            last_period = max(text.rfind('.'), text.rfind('!'), text.rfind('?'))
+            if last_period > len(text) * 0.5:  # If we have at least half the text with complete sentences
+                # Truncate to last complete sentence
+                text = text[:last_period + 1]
+            else:
+                # Try to complete the sentence or add period
                 words = text.split()
-                while words and words[-1].lower() in incomplete_endings:
+                # Remove trailing incomplete words/phrases
+                incomplete_endings = [
+                    'the', 'a', 'an', 'and', 'or', 'but', 'with', 'in', 'on', 'at', 
+                    'to', 'for', 'from', 'by', 'is', 'are', 'was', 'were', 'has', 
+                    'have', 'no', 'of', 'that', 'which', 'who', 'whose', 'this',
+                    'these', 'those', 'their', 'its', 'his', 'her', 'appears',
+                    'seems', 'possibly', 'likely', 'probably', 'some', 'what',
+                    'like', 'as', 'be', 'being', 'been', 'would', 'could', 'might',
+                    'may', 'can', 'will', 'shall', 'should', 'must', 'not', 'also',
+                    'very', 'quite', 'rather', 'somewhat', 'wearing', 'carrying',
+                    'holding', 'kind', 'type', 'sort'
+                ]
+                
+                while words and words[-1].lower().rstrip('.,!?') in incomplete_endings:
                     words.pop()
+                
                 text = ' '.join(words)
-            
-            if text and text[-1] not in '.!?':
-                text += '.'
+                if text and text[-1] not in '.!?':
+                    text += '.'
+        
+        # Final cleanup - remove any trailing fragments after the last period
+        last_period = max(text.rfind('.'), text.rfind('!'), text.rfind('?'))
+        if last_period > 0 and last_period < len(text) - 1:
+            remaining = text[last_period + 1:].strip()
+            # If remaining text is just a few words (incomplete sentence), remove it
+            if len(remaining.split()) <= 5:
+                text = text[:last_period + 1]
+        
+        # Remove incomplete parenthetical content at the end
+        text = re.sub(r'\s*\([^)]*$', '', text)
+        text = re.sub(r'\s*\[[^\]]*$', '', text)
+        
+        # Remove sentences that are too short (likely fragments)
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        valid_sentences = [s for s in sentences if len(s.split()) >= 3 or s.strip() == '']
+        text = ' '.join(valid_sentences)
+        
+        # Clean up multiple spaces
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        # Ensure proper ending punctuation
+        if text and text[-1] not in '.!?':
+            text += '.'
+        
+        # Ensure we have valid output
+        text = text.strip()
+        if not text or len(text) < 30:
+            return "The image shows a person."
         
         return text
     
@@ -379,12 +469,14 @@ class PersonVLMPretrained(nn.Module):
     def generate(
         self,
         images: torch.Tensor,
-        max_length: int = 64,
-        temperature: float = 0.7,
-        top_k: int = 50,
-        top_p: float = 0.9,
+        max_length: int = 100,
+        temperature: float = 0.8,
+        top_k: int = 40,
+        top_p: float = 0.92,
         do_sample: bool = True,
         use_prompt: bool = True,
+        repetition_penalty: float = 1.2,
+        no_repeat_ngram_size: int = 3,
     ) -> List[str]:
         """
         Generate descriptions for person images.
@@ -392,11 +484,13 @@ class PersonVLMPretrained(nn.Module):
         Args:
             images: (B, 3, H, W) person crop images
             max_length: Maximum tokens to generate
-            temperature: Sampling temperature
-            top_k: Top-k sampling
-            top_p: Nucleus sampling
+            temperature: Sampling temperature (higher = more random)
+            top_k: Top-k sampling (0 = disabled)
+            top_p: Nucleus sampling threshold
             do_sample: Whether to sample or use greedy decoding
             use_prompt: Whether to use a prompt prefix for better sentence structure
+            repetition_penalty: Penalty for repeating tokens (1.0 = no penalty)
+            no_repeat_ngram_size: Prevent repeating n-grams of this size
             
         Returns:
             List of generated descriptions
@@ -484,7 +578,31 @@ class PersonVLMPretrained(nn.Module):
             )
             
             # Get logits for last position
-            next_logits = outputs.logits[:, -1, :] / temperature
+            next_logits = outputs.logits[:, -1, :].clone()
+            
+            # Apply repetition penalty
+            if repetition_penalty != 1.0:
+                for b in range(B):
+                    for prev_token in current_ids[b].tolist():
+                        if next_logits[b, prev_token] > 0:
+                            next_logits[b, prev_token] /= repetition_penalty
+                        else:
+                            next_logits[b, prev_token] *= repetition_penalty
+            
+            # Apply n-gram blocking
+            if no_repeat_ngram_size > 0 and current_ids.shape[1] >= no_repeat_ngram_size:
+                for b in range(B):
+                    # Get the last (n-1) tokens
+                    ngram_prefix = tuple(current_ids[b, -(no_repeat_ngram_size-1):].tolist())
+                    # Find all n-grams in the sequence
+                    for i in range(current_ids.shape[1] - no_repeat_ngram_size + 1):
+                        if tuple(current_ids[b, i:i+no_repeat_ngram_size-1].tolist()) == ngram_prefix:
+                            # Block the token that would complete this n-gram
+                            blocked_token = current_ids[b, i + no_repeat_ngram_size - 1].item()
+                            next_logits[b, blocked_token] = float('-inf')
+            
+            # Apply temperature
+            next_logits = next_logits / temperature
             
             # Apply top-k filtering
             if top_k > 0:
