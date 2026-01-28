@@ -384,19 +384,23 @@ class PersonVLMPretrained(nn.Module):
         
         text = ' '.join(filtered_sentences)
         
-        # Remove common repetitive phrases that appear multiple times
-        repetitive_phrases = [
-            r'(There is no visible text or unique identifiers? in the image\.?\s*){2,}',
-            r'(The activity depicted is simply standing\.?\s*){2,}',
-            r'(No text or unique identifiers? (?:is|are) visible\.?\s*){2,}',
-            r'(The background is (?:blurry|out of focus)\.?\s*){2,}',
+        # Remove filler phrases entirely (these don't add value)
+        filler_phrases = [
+            r'There (?:is|are) no visible texts? or unique identifiers?[^.]*\.?\s*',
+            r'There (?:is|are) no visible texts?[^.]*\.?\s*',
+            r'There (?:is|are) no (?:visible )?texts?[^.]*\.?\s*',
+            r'No visible texts? or unique identifiers?[^.]*\.?\s*',
+            r'No visible texts? (?:can be seen|is visible|are visible)[^.]*\.?\s*',
+            r'No visible texts?[^.]*\.?\s*',
+            r'The activity depicted is simply standing\.?\s*',
+            r'No texts? or unique identifiers?[^.]*\.?\s*',
+            r'No unique identifiers[^.]*\.?\s*',
         ]
-        for pattern in repetitive_phrases:
-            # Keep only one occurrence
-            match = re.search(pattern, text, re.IGNORECASE)
-            if match:
-                # Replace multiple occurrences with single
-                text = re.sub(pattern, match.group(1), text, flags=re.IGNORECASE)
+        for pattern in filler_phrases:
+            text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+        
+        # Clean up extra spaces after removal
+        text = re.sub(r'\s+', ' ', text).strip()
         
         # Handle incomplete final sentences
         # Find the last complete sentence (ending with .!?)
@@ -424,7 +428,8 @@ class PersonVLMPretrained(nn.Module):
                     'like', 'as', 'be', 'being', 'been', 'would', 'could', 'might',
                     'may', 'can', 'will', 'shall', 'should', 'must', 'not', 'also',
                     'very', 'quite', 'rather', 'somewhat', 'wearing', 'carrying',
-                    'holding', 'kind', 'type', 'sort'
+                    'holding', 'kind', 'type', 'sort', 'image', 'quality', 'there',
+                    'here', 'visible', 'resolution', 'background', 'activity'
                 ]
                 
                 while words and words[-1].lower().rstrip('.,!?') in incomplete_endings:
@@ -446,9 +451,50 @@ class PersonVLMPretrained(nn.Module):
         text = re.sub(r'\s*\([^)]*$', '', text)
         text = re.sub(r'\s*\[[^\]]*$', '', text)
         
-        # Remove sentences that are too short (likely fragments)
+        # Fix unbalanced parentheses
+        while text.count('(') != text.count(')'):
+            if text.count('(') > text.count(')'):
+                # Remove last unclosed open paren
+                idx = text.rfind('(')
+                if idx != -1:
+                    text = text[:idx] + text[idx+1:]
+            else:
+                # Remove extra close parens
+                idx = text.rfind(')')
+                if idx != -1:
+                    text = text[:idx] + text[idx+1:]
+        
+        # Clean up spaces after paren removal
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        # Remove sentences that are too short or are known fragments
         sentences = re.split(r'(?<=[.!?])\s+', text)
-        valid_sentences = [s for s in sentences if len(s.split()) >= 3 or s.strip() == '']
+        
+        # Known fragment patterns (incomplete thoughts)
+        fragment_patterns = [
+            r'^The image quality\.?$',
+            r'^The image resolution\.?$',
+            r'^The background\.?$',
+            r'^The activity\.?$',
+            r'^There\.?$',
+            r'^Here\.?$',
+            r'^The person\.?$',
+            r'^The individual\.?$',
+        ]
+        
+        valid_sentences = []
+        for s in sentences:
+            s_stripped = s.strip()
+            if not s_stripped:
+                continue
+            # Check if too short
+            if len(s_stripped.split()) < 4:
+                continue
+            # Check if matches a fragment pattern
+            is_fragment = any(re.match(p, s_stripped, re.IGNORECASE) for p in fragment_patterns)
+            if not is_fragment:
+                valid_sentences.append(s)
+        
         text = ' '.join(valid_sentences)
         
         # Clean up multiple spaces
